@@ -4,6 +4,8 @@ import { LEADERBOARD_DATA, type Team } from "@/constants/leaderboardData";
 interface LeaderboardContextType {
     teams: Team[];
     updateTeams: (newTeams: Team[]) => void;
+    addTeam: (teamData: Partial<Team>) => void;
+    verifyTeam: (teamName: string) => void;
     resetTeams: () => void;
 }
 
@@ -26,6 +28,8 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
 
     const updateTeams = (newTeams: Team[]) => {
         // Sort teams by total points descending, then placement points, then kills
+        // Only verified teams should be ranked on the leaderboard, 
+        // but we keep the sorting logic general for all teams in the state.
         const sortedTeams = [...newTeams].sort((a, b) => {
             if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
             if (b.placementPoints !== a.placementPoints) return b.placementPoints - a.placementPoints;
@@ -42,13 +46,34 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("bgmi_leaderboard", JSON.stringify(rankedTeams));
     };
 
+    const addTeam = (teamData: Partial<Team>) => {
+        const newTeam: Team = {
+            rank: teams.length + 1,
+            teamName: teamData.teamName || "Unknown Team",
+            totalKills: 0,
+            placementPoints: 0,
+            totalPoints: 0,
+            wins: 0,
+            isVerified: false,
+            ...teamData
+        };
+        updateTeams([...teams, newTeam]);
+    };
+
+    const verifyTeam = (teamName: string) => {
+        const updatedTeams = teams.map(team =>
+            team.teamName === teamName ? { ...team, isVerified: true } : team
+        );
+        updateTeams(updatedTeams);
+    };
+
     const resetTeams = () => {
         setTeams(LEADERBOARD_DATA);
         localStorage.removeItem("bgmi_leaderboard");
     };
 
     return (
-        <LeaderboardContext.Provider value={{ teams, updateTeams, resetTeams }}>
+        <LeaderboardContext.Provider value={{ teams, updateTeams, addTeam, verifyTeam, resetTeams }}>
             {children}
         </LeaderboardContext.Provider>
     );

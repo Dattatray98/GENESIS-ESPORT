@@ -27,6 +27,8 @@ export default function Navbar() {
         { name: "Rules", href: "/#rules", type: "anchor" },
         { name: "Venue", href: "/#venue", type: "anchor" },
         { name: "Leaderboard", href: "/leaderboard", type: "link" },
+        { name: "Teams", href: "/teams", type: "link" },
+        { name: "Register", href: "/entry", type: "link" },
     ];
 
     const handleNavigation = (href: string, type: string) => {
@@ -84,8 +86,8 @@ export default function Navbar() {
                             )} />
                         </button>
                     ))}
-                    <Button variant="neon" size="sm" className="ml-4 font-teko text-lg tracking-wider">
-                        VERIFY TEAM
+                    <Button variant="neon" size="sm" className="ml-4 font-teko text-lg tracking-wider" onClick={() => navigate("/entry")}>
+                        REGISTER NOW
                     </Button>
                 </div>
 
@@ -117,8 +119,8 @@ export default function Navbar() {
                                     {link.name}
                                 </button>
                             ))}
-                            <Button variant="neonOutline" className="w-full max-w-xs mt-4" onClick={() => setIsOpen(false)}>
-                                VERIFY TEAM
+                            <Button variant="neonOutline" className="w-full max-w-xs mt-4" onClick={() => { setIsOpen(false); navigate("/entry"); }}>
+                                REGISTER NOW
                             </Button>
                         </div>
                     </motion.div>

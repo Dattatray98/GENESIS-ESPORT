@@ -95,13 +95,20 @@ export default function Hero() {
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-center gap-6">
-                        <Button size="xl" variant="neon" className="gap-2 group" onClick={() => navigate("/leaderboard")}>
-                            VIEW LEADERBOARD
-                            <Trophy className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                        <Button size="xl" variant="neon" className="gap-2 group" onClick={() => navigate("/entry")}>
+                            REGISTER SQUAD
+                            <Trophy className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                         </Button>
-                        <Button size="xl" variant="neonOutline" className="gap-2">
+                        <Button size="xl" variant="neonOutline" className="gap-2 group" onClick={() => navigate("/leaderboard")}>
+                            VIEW LEADERBOARD
+                            <Trophy className="w-5 h-5 group-hover:rotate-45 transition-transform text-yellow-500" />
+                        </Button>
+                        <Button size="xl" variant="neonOutline" className="gap-2" onClick={() => {
+                            const element = document.getElementById("schedule");
+                            if (element) element.scrollIntoView({ behavior: "smooth" });
+                        }}>
                             <Clock className="w-5 h-5" />
-                            VIEW SCHEDULE
+                            SCHEDULE
                         </Button>
                     </div>
                 </motion.div>
