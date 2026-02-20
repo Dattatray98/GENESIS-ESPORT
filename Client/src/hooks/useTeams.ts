@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import { type Team } from '@/constants/leaderboardData';
 
-const API_URL = 'http://localhost:5000/api/teams';
+const API_URL = import.meta.env.VITE_API_URL + '/teams';
 
 export interface TeamData {
     teamName: string;
