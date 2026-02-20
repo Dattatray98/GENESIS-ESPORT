@@ -131,13 +131,16 @@ export const getTeams = async (req: Request, res: Response) => {
 
         let teams;
         if (isAdmin) {
-            // Admin gets everything
-            teams = await Team.find().sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 });
+            // Admin gets everything, using lean for performance
+            teams = await Team.find()
+                .sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 })
+                .lean();
         } else {
-            // Guests only get public leaderboard data
+            // Guests only get public leaderboard data, excluding heavy fields
             teams = await Team.find()
                 .select('-email -phone -documentUrl')
-                .sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 });
+                .sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 })
+                .lean();
         }
 
         res.json(teams);
@@ -153,23 +156,32 @@ export const updateTeams = async (req: Request, res: Response) => {
     try {
         const { teams } = req.body;
 
-        const updatedTeams = await Promise.all(
-            teams.map(async (teamData: any) => {
-                return await Team.findOneAndUpdate(
-                    { teamName: teamData.teamName },
-                    {
+        if (!Array.isArray(teams)) {
+            return res.status(400).json({ message: "Invalid teams data" });
+        }
+
+        const bulkOps = teams.map((teamData: any) => ({
+            updateOne: {
+                filter: { teamName: teamData.teamName },
+                update: {
+                    $set: {
                         totalKills: teamData.totalKills,
                         placementPoints: teamData.placementPoints,
                         totalPoints: teamData.totalPoints,
                         wins: teamData.wins,
                         isVerified: teamData.isVerified,
-                    },
-                    { new: true, upsert: true }
-                );
-            })
-        );
+                    }
+                },
+                upsert: true
+            }
+        }));
 
-        res.json({ message: 'Teams updated successfully', teams: updatedTeams });
+        const result = await Team.bulkWrite(bulkOps);
+
+        res.json({
+            message: 'Teams updated successfully',
+            count: result.modifiedCount + result.upsertedCount
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

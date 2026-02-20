@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import { type Team } from '@/constants/leaderboardData';
@@ -22,7 +22,7 @@ export const useTeams = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const registerTeam = async (teamData: TeamData | FormData) => {
+    const registerTeam = useCallback(async (teamData: TeamData | FormData) => {
         setLoading(true);
         setError(null);
         try {
@@ -58,9 +58,9 @@ export const useTeams = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
-    const fetchTeams = async () => {
+    const fetchTeams = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -75,9 +75,9 @@ export const useTeams = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
-    const updateTeamsScore = async (newTeams: Team[]) => {
+    const updateTeamsScore = useCallback(async (newTeams: Team[]) => {
         if (!user || user.role !== 'admin') {
             throw new Error('Not authorized to update scores');
         }
@@ -98,7 +98,7 @@ export const useTeams = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
     return { registerTeam, fetchTeams, updateTeamsScore, loading, error };
 };

@@ -29,7 +29,7 @@ export default function Navbar() {
         { name: "Rules", href: "/#rules", type: "anchor", protected: false },
         { name: "FAQ", href: "/#faq", type: "anchor", protected: false },
         { name: "Leaderboard", href: "/leaderboard", type: "link", protected: false },
-        { name: "Admin", href: "/admin/leaderboard/update", type: "link", protected: true },
+        { name: "Update Score", href: "/admin/leaderboard/update", type: "link", protected: true },
         { name: "Teams", href: "/admin/teams", type: "link", protected: true },
     ];
 

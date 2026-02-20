@@ -7,7 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Trash2, Plus, Save, Search } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
-export default function Admin() {
+export default function UpdateScore() {
     const { teams, updateTeams } = useLeaderboard();
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState("");
@@ -28,11 +28,17 @@ export default function Admin() {
         return () => window.removeEventListener("keydown", handleGlobalKeyDown);
     }, []);
 
-    const { control, register, handleSubmit, setValue, getValues } = useForm({
+    const { control, register, handleSubmit, setValue, getValues, reset } = useForm({
         defaultValues: {
-            teams: teams.filter(team => team.isVerified),
+            teams: teams.filter((team: Team) => team.isVerified),
         },
     });
+
+    useEffect(() => {
+        reset({
+            teams: teams.filter((team: Team) => team.isVerified),
+        });
+    }, [teams, reset]);
 
     const { fields, remove } = useFieldArray({
         control,
@@ -51,7 +57,7 @@ export default function Admin() {
         }));
 
         // Merge with existing teams that were NOT in the form (unverified teams)
-        const unverifiedTeams = teams.filter(t => !t.isVerified);
+        const unverifiedTeams = teams.filter((t: Team) => !t.isVerified);
         const allTeams = [...updatedVerifiedTeams, ...unverifiedTeams];
 
         await updateTeams(allTeams);
@@ -68,7 +74,7 @@ export default function Admin() {
             <main className="pt-24 pb-16 section-container max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-4xl font-teko font-bold text-white uppercase">
-                        Admin <span className="text-yellow-500">Dashboard</span>
+                        Update <span className="text-yellow-500">Score</span>
                     </h1>
                     <div className="flex gap-4">
 

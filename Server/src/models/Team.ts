@@ -37,4 +37,6 @@ const TeamSchema: Schema = new Schema({
     rank: { type: Number },
 }, { timestamps: true });
 
+TeamSchema.index({ totalPoints: -1, placementPoints: -1, totalKills: -1 });
+
 export default mongoose.model<ITeam>('Team', TeamSchema);
