@@ -5,7 +5,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
 export default function Venue() {
     return (
-        <section className="section-container bg-zinc-950 py-16">
+        <section className="section-container py-16">
             <div className="flex flex-col md:flex-row gap-12 items-center">
                 <div className="w-full md:w-1/2">
                     <ScrollReveal>

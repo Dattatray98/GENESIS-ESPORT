@@ -1,7 +1,8 @@
 export const TOURNAMENT_INFO = {
-    name: "GENESIS ESPORTS 2.0",
-    subheading: "BATTLE GROUNDS MOBILE INDIA",
-    subtitle: "OFFLINE CHAMPIONSHIP 2026",
+    navName: "GENESIS ESPORTS 2026",
+    name: "GENESIS ESPORTS S-1",
+    subheading: "RISE OF COMPETITORS",
+    subtitle: "IIC-SIT, LONAVALA PRESENTS",
     date: "FEBRUARY 28, 2026",
     location: "IIC-SIT, LONAVALA",
     prizePool: "₹ 5,000",

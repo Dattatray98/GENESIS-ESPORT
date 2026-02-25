@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { Users, User, Phone, Mail, Trophy, FileText, Upload, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Users, User, Phone, Mail, Trophy, FileText, Upload, CheckCircle2, AlertCircle, Loader2, Calendar } from "lucide-react";
 import { useLeaderboard } from "@/context/LeaderboardContext";
 import { useTeams } from "@/hooks/useTeams";
+import axios from "axios";
 
 interface TeamEntryForm {
     teamName: string;
@@ -22,13 +23,44 @@ interface TeamEntryForm {
 }
 
 export default function TeamEntry() {
-    const { addTeam } = useLeaderboard();
+    const [searchParams] = useSearchParams();
+    const seasonIdFromUrl = searchParams.get("seasonId");
+
+    const { addTeam, currentSeasonId } = useLeaderboard();
     const { registerTeam, loading, error: apiError } = useTeams();
     const navigate = useNavigate();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [activeSeasons, setActiveSeasons] = useState<any[]>([]);
+    const [selectedSeasonId, setSelectedSeasonId] = useState<string>(seasonIdFromUrl || currentSeasonId || "");
+    const [selectedSeasonName, setSelectedSeasonName] = useState<string>("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { register, handleSubmit, reset, formState: { errors } } = useForm<TeamEntryForm>();
+
+    useEffect(() => {
+        const fetchSeasons = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/seasons`);
+                const active = response.data.filter((s: any) => s.status === 'active');
+                setActiveSeasons(active);
+
+                const targetId = seasonIdFromUrl || currentSeasonId;
+                if (targetId) {
+                    const current = response.data.find((s: any) => s._id === targetId);
+                    if (current) {
+                        setSelectedSeasonName(current.title);
+                        setSelectedSeasonId(current._id);
+                    }
+                } else if (active.length === 1) {
+                    setSelectedSeasonId(active[0]._id);
+                    setSelectedSeasonName(active[0].title);
+                }
+            } catch (error) {
+                console.error("Error fetching seasons:", error);
+            }
+        };
+        fetchSeasons();
+    }, [seasonIdFromUrl]);
 
     const onSubmit = async (data: TeamEntryForm) => {
         try {
@@ -40,9 +72,13 @@ export default function TeamEntry() {
             if (selectedFile) {
                 formData.append('file', selectedFile);
             } else {
-                // If no file but we had a field, we can throw error or handle
                 throw new Error("Verification document image is required");
             }
+
+            if (!selectedSeasonId) {
+                throw new Error("Please select a tournament season");
+            }
+            formData.append('seasonId', selectedSeasonId);
 
             const response = await registerTeam(formData);
             if (response && response.team) {
@@ -83,6 +119,12 @@ export default function TeamEntry() {
                             <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                                 Secure your spot in the championship. Fill in your squad details to participate.
                             </p>
+                            {selectedSeasonName && (
+                                <div className="mt-4 inline-flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-4 py-2 rounded-full border border-yellow-500/20 text-xs font-black uppercase tracking-widest">
+                                    <Calendar className="w-4 h-4" />
+                                    Season: {selectedSeasonName}
+                                </div>
+                            )}
                         </div>
                     </ScrollReveal>
 
@@ -93,7 +135,29 @@ export default function TeamEntry() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-6">
-                                        <h3 className="text-2xl font-teko text-yellow-500 border-l-4 border-yellow-500 pl-4 mb-4 uppercase">Squad Info</h3>
+                                        <h3 className="text-2xl font-teko text-yellow-500 border-l-4 border-yellow-500 pl-4 mb-4 uppercase">Tournament & Squad</h3>
+
+                                        {!seasonIdFromUrl && activeSeasons.length > 1 && (
+                                            <div>
+                                                <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-yellow-500" /> Select Season *
+                                                </label>
+                                                <select
+                                                    value={selectedSeasonId}
+                                                    onChange={(e) => {
+                                                        setSelectedSeasonId(e.target.value);
+                                                        const s = activeSeasons.find(x => x._id === e.target.value);
+                                                        if (s) setSelectedSeasonName(s.title);
+                                                    }}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all appearance-none"
+                                                >
+                                                    <option value="" disabled>Select an active season</option>
+                                                    {activeSeasons.map(s => (
+                                                        <option key={s._id} value={s._id} className="bg-zinc-900">{s.title}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
                                                 <Trophy className="w-4 h-4 text-yellow-500" /> Team Name *

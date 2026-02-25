@@ -13,7 +13,7 @@ export const ScrollReveal = ({ children, className = "", width = "100%", delay =
     const isInView = useInView(ref, { once: true, margin: "-100px" });
 
     return (
-        <div ref={ref} style={{ width, overflow: "hidden" }} className={className}>
+        <div ref={ref} style={{ width }} className={className}>
             <motion.div
                 variants={{
                     hidden: { opacity: 0, y: 75 },
@@ -22,7 +22,7 @@ export const ScrollReveal = ({ children, className = "", width = "100%", delay =
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
                 transition={{ duration: 0.5, delay, ease: "easeOut" }}
-                className="h-full"
+                className="h-full py-3"
             >
                 {children}
             </motion.div>

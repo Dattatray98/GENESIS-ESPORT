@@ -1,33 +1,30 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL + '/auth';
+import { useAxios } from './useAxios';
 
 export const useAuthApi = () => {
     const { login: setAuth, logout: performLogout } = useAuth();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { loading, error, request, clearError } = useAxios();
 
-    const login = async (credentials: any) => {
-        setLoading(true);
-        setError(null);
+    const login = useCallback(async (credentials: any) => {
         try {
-            const response = await axios.post(`${API_URL}/login`, credentials);
-            setAuth(response.data);
-            return response.data;
+            const data = await request({
+                url: 'auth/login',
+                method: 'POST',
+                data: credentials
+            });
+            setAuth(data);
+            return data;
         } catch (err: any) {
-            const message = err.response?.data?.message || err.message || 'Login failed';
-            setError(message);
-            throw new Error(message);
-        } finally {
-            setLoading(false);
+            // Error is handled by useAxios and set in its error state
+            throw err;
         }
-    };
+    }, [request, setAuth]);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         performLogout();
-    };
+    }, [performLogout]);
 
-    return { login, logout, loading, error };
+    return { login, logout, loading, error, clearError };
 };
+

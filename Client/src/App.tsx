@@ -11,8 +11,13 @@ const UpdateScore = lazy(() => import("@/pages/UpdateScore"));
 const TeamEntry = lazy(() => import("@/pages/TeamEntry"));
 const TeamDetails = lazy(() => import("@/pages/TeamDetails"));
 const Login = lazy(() => import("@/pages/Login"));
+const CurrentSeason = lazy(() => import("@/pages/CurrentSeason"));
+const Admin = lazy(() => import("@/pages/Admin"));
+const CreateSeason = lazy(() => import("@/pages/CreateSeason"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsConditions = lazy(() => import("@/pages/TermsConditions"));
+const ObsOverlay = lazy(() => import("@/pages/ObsOverlay"));
+const Matches = lazy(() => import("@/pages/Matches"));
 
 // Tactical Loading Fallback
 const PageLoader = () => (
@@ -35,12 +40,17 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/overlay/:seasonId?" element={<ObsOverlay />} />
+              <Route path="/matches" element={<Matches />} />
 
               {/* Admin Only Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/seasons/:seasonId" element={<CurrentSeason />} />
                 <Route path="/admin/leaderboard/update" element={<UpdateScore />} />
                 <Route path="/admin/entry" element={<TeamEntry />} />
                 <Route path="/admin/teams" element={<TeamDetails />} />
+                <Route path="/admin/seasons/createseason" element={<CreateSeason />} />
               </Route>
             </Routes>
           </Suspense>

@@ -16,7 +16,7 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
                     <div className="text-center md:text-left">
                         <h2 className="text-2xl font-teko text-white font-bold uppercase tracking-wider mb-4">
-                            {TOURNAMENT_INFO.name.split(' ')[0]} <span className="text-yellow-500">{TOURNAMENT_INFO.name.split(' ').slice(1).join(' ')}</span>
+                            {TOURNAMENT_INFO.navName.split(' ')[0]} <span className="text-yellow-500">{TOURNAMENT_INFO.navName.split(' ').slice(1).join(' ')}</span>
                         </h2>
                         <p className="text-sm opacity-70 max-w-xs mb-6 mx-auto md:mx-0">
                             {TOURNAMENT_INFO.subtitle}. The ultimate battle royale esports experience. Join the legends and compete for glory.

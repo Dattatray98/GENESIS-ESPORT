@@ -11,6 +11,8 @@ interface LeaderboardContextType {
     resetTeams: () => void;
     refreshTeams: () => Promise<void>;
     loading: boolean;
+    setSeasonId: (id: string) => void;
+    currentSeasonId: string | null;
 }
 
 const LeaderboardContext = createContext<LeaderboardContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
         }
     });
     const [loading, setLoading] = useState(true);
+    const [currentSeasonId, setCurrentSeasonId] = useState<string | null>(null);
 
     const sortTeams = useCallback((teamList: Team[]) => {
         return [...teamList].sort((a, b) => {
@@ -37,11 +40,11 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    const loadTeams = useCallback(async () => {
+    const loadTeams = useCallback(async (seasonId?: string) => {
         setLoading(true);
         try {
-            console.log("[LeaderboardContext] Syncing teams from API...");
-            const data = await getTeamsApi();
+            console.log(`[LeaderboardContext] Syncing teams from API for season: ${seasonId || 'all'}...`);
+            const data = await getTeamsApi(seasonId);
             setTeams(sortTeams(data));
             localStorage.setItem("bgmi_leaderboard", JSON.stringify(data));
         } catch (error) {
@@ -52,8 +55,12 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
     }, [getTeamsApi, sortTeams]);
 
     useEffect(() => {
-        loadTeams();
-    }, [user, loadTeams]);
+        loadTeams(currentSeasonId || undefined);
+    }, [user, loadTeams, currentSeasonId]);
+
+    const setSeasonId = useCallback((id: string) => {
+        setCurrentSeasonId(id);
+    }, []);
 
     const updateTeams = useCallback(async (newTeams: Team[]) => {
         const sortedTeams = sortTeams(newTeams);
@@ -79,11 +86,14 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
             placementPoints: 0,
             totalPoints: 0,
             wins: 0,
+            alivePlayers: 4,
             isVerified: false,
+            group: 'None',
+            seasonId: currentSeasonId || undefined,
             ...teamData
-        };
+        } as Team;
         updateTeams([...teams, newTeam]);
-    }, [teams, updateTeams]);
+    }, [teams, updateTeams, currentSeasonId]);
 
     const verifyTeam = useCallback((teamName: string) => {
         const updatedTeams = teams.map(team =>
@@ -103,9 +113,11 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
         addTeam,
         verifyTeam,
         resetTeams,
-        refreshTeams: loadTeams,
-        loading
-    }), [teams, updateTeams, addTeam, verifyTeam, resetTeams, loadTeams, loading]);
+        refreshTeams: () => loadTeams(currentSeasonId || undefined),
+        loading,
+        setSeasonId,
+        currentSeasonId
+    }), [teams, updateTeams, addTeam, verifyTeam, resetTeams, loadTeams, loading, setSeasonId, currentSeasonId]);
 
     return (
         <LeaderboardContext.Provider value={value}>

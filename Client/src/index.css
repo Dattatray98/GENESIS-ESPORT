@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+.hide-scrollbar {
+  /* For Internet Explorer and Edge */
+  -ms-overflow-style: none;
+  /* For Firefox */
+  scrollbar-width: none;
+  /* Ensure content can still scroll if it overflows */
+  overflow-y: scroll; 
+}
+
+/* For Chrome, Safari, and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
 @theme {
   --font-rajdhani: "Rajdhani", sans-serif;
   --font-teko: "Teko", sans-serif;
@@ -13,7 +28,14 @@
 
 @layer base {
   body {
-    @apply font-rajdhani bg-zinc-950 text-gray-100 antialiased overflow-x-hidden;
+    font-family: var(--font-rajdhani);
+    background-color: #09090b;
+    /* bg-zinc-950 approx */
+    color: #f3f4f6;
+    /* text-gray-100 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   h1,
@@ -22,17 +44,42 @@
   h4,
   h5,
   h6 {
-    @apply font-teko font-bold uppercase tracking-wide;
+    font-family: var(--font-teko);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    /* tracking-wide */
   }
 }
 
 @layer components {
   .section-container {
-    @apply container mx-auto px-4 py-16 md:py-24 max-w-7xl;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+    max-width: 80rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-container {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
   }
 
   .card-hover {
-    @apply transition-transform duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-neon/20;
+    transition-property: transform, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 10px rgba(250, 204, 21, 0.2);
   }
 
   .text-neon-glow {
@@ -60,11 +107,13 @@
   /* Hide number input spinners */
   .no-spinner::-webkit-inner-spin-button,
   .no-spinner::-webkit-outer-spin-button {
+    appearance: none;
     -webkit-appearance: none;
     margin: 0;
   }
 
   .no-spinner {
+    appearance: textfield;
     -moz-appearance: textfield;
   }
 }

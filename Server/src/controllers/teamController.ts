@@ -21,11 +21,18 @@ export const registerTeam = async (req: Request, res: Response) => {
             player2,
             player3,
             player4,
-            substitute
+            substitute,
+            seasonId
         } = req.body;
 
         if (!req.file) {
             return res.status(400).json({ message: 'Verification document file is required' });
+        }
+
+        if (!seasonId) {
+            console.log("season id missing!")
+        } else {
+            console.log(seasonId)
         }
 
         localFilePath = req.file.path;
@@ -63,7 +70,8 @@ export const registerTeam = async (req: Request, res: Response) => {
             player3,
             player4,
             substitute,
-            documentUrl: documentUrl
+            documentUrl: documentUrl,
+            seasonId
         });
 
         console.log('Saving to MongoDB...');
@@ -129,16 +137,27 @@ export const getTeams = async (req: Request, res: Response) => {
             }
         }
 
+        const { seasonId } = req.query;
+        const filter: any = {};
+        if (seasonId) {
+            filter.seasonId = seasonId;
+        } else {
+            // Only show teams that have a season reference
+            filter.seasonId = { $exists: true, $ne: null };
+        }
+
         let teams;
         if (isAdmin) {
             // Admin gets everything, using lean for performance
-            teams = await Team.find()
+            teams = await Team.find(filter)
+                .populate('seasonId', 'title status')
                 .sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 })
                 .lean();
         } else {
             // Guests only get public leaderboard data, excluding heavy fields
-            teams = await Team.find()
+            teams = await Team.find(filter)
                 .select('-email -phone -documentUrl')
+                .populate('seasonId', 'title status')
                 .sort({ totalPoints: -1, placementPoints: -1, totalKills: -1 })
                 .lean();
         }
@@ -169,7 +188,9 @@ export const updateTeams = async (req: Request, res: Response) => {
                         placementPoints: teamData.placementPoints,
                         totalPoints: teamData.totalPoints,
                         wins: teamData.wins,
+                        alivePlayers: teamData.alivePlayers,
                         isVerified: teamData.isVerified,
+                        seasonId: teamData.seasonId
                     }
                 },
                 upsert: true

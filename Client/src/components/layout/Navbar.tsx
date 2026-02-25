@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Menu, X, Crosshair } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { LogOut } from "lucide-react";
@@ -29,8 +29,7 @@ export default function Navbar() {
         { name: "Rules", href: "/#rules", type: "anchor", protected: false },
         { name: "FAQ", href: "/#faq", type: "anchor", protected: false },
         { name: "Leaderboard", href: "/leaderboard", type: "link", protected: false },
-        { name: "Update Score", href: "/admin/leaderboard/update", type: "link", protected: true },
-        { name: "Teams", href: "/admin/teams", type: "link", protected: true },
+        { name: "Admin Panel", href: "/admin", type: "link", protected: true },
     ];
 
     const filteredLinks = navLinks.filter(link => !link.protected || (user && user.role === 'admin'));
@@ -68,8 +67,7 @@ export default function Navbar() {
                     className="flex items-center gap-2 font-teko text-3xl font-bold uppercase tracking-widest text-white cursor-pointer select-none"
                     onClick={() => handleNavigation("/", "link")}
                 >
-                    <Crosshair className="w-8 h-8 text-yellow-500 hover:rotate-45 transition-transform duration-500" />
-                    <span>GENESIS E-2.0 <span className="text-yellow-500">2026</span></span>
+                    <span>GENESIS ESPORT <span className="text-yellow-500">2026</span></span>
                 </div>
 
                 {/* Desktop Menu */}

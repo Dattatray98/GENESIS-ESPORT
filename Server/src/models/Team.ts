@@ -14,7 +14,9 @@ export interface ITeam extends Document {
     placementPoints: number;
     totalPoints: number;
     wins: number;
+    alivePlayers: number;
     isVerified: boolean;
+    seasonId: mongoose.Types.ObjectId;
     rank?: number;
     createdAt: Date;
 }
@@ -33,7 +35,9 @@ const TeamSchema: Schema = new Schema({
     placementPoints: { type: Number, default: 0 },
     totalPoints: { type: Number, default: 0 },
     wins: { type: Number, default: 0 },
+    alivePlayers: { type: Number, default: 4 },
     isVerified: { type: Boolean, default: false },
+    seasonId: { type: Schema.Types.ObjectId, ref: 'Season', required: true },
     rank: { type: Number },
 }, { timestamps: true });
 

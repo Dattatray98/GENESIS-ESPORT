@@ -2,16 +2,26 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { useLeaderboard } from "@/context/LeaderboardContext";
-import { User, Shield, Info, ExternalLink, Mail, Phone, Search, X, Trophy, Users, CheckCircle, FileText } from "lucide-react";
+import { User, Shield, Info, ExternalLink, Mail, Phone, Search, X, Trophy, Users, CheckCircle, FileText, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/constants/leaderboardData";
 
 export default function TeamDetails() {
-    const { teams, verifyTeam } = useLeaderboard();
+    const [searchParams] = useSearchParams();
+    const seasonId = searchParams.get("seasonId");
+    const { teams, verifyTeam, setSeasonId } = useLeaderboard();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+
+    // Sync seasonId with context
+    useEffect(() => {
+        if (seasonId) {
+            setSeasonId(seasonId);
+        }
+    }, [seasonId, setSeasonId]);
 
     // Prevent background scrolling and handle Escape key
     useEffect(() => {
@@ -33,9 +43,12 @@ export default function TeamDetails() {
         };
     }, [selectedTeam]);
 
-    const filteredTeams = teams.filter(team =>
-        team.teamName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredTeams = teams.filter(team => {
+        const matchesSearch = team.teamName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSeason = !seasonId ||
+            (typeof team.seasonId === 'string' ? team.seasonId === seasonId : team.seasonId?._id === seasonId);
+        return matchesSearch && matchesSeason;
+    });
 
     return (
         <div className="bg-black min-h-screen text-gray-100 font-rajdhani selection:bg-yellow-500 selection:text-black">
@@ -116,6 +129,14 @@ export default function TeamDetails() {
                                                 </span>
                                             </div>
                                         </div>
+
+                                        {team.group && team.group !== 'None' && (
+                                            <div className="mb-4 inline-flex">
+                                                <span className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-700">
+                                                    {team.group}
+                                                </span>
+                                            </div>
+                                        )}
 
                                         <div className="mt-auto space-y-4">
                                             <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-zinc-500">
@@ -209,6 +230,12 @@ export default function TeamDetails() {
                                                             <Trophy className="w-3 h-3 text-yellow-500" />
                                                             {selectedTeam.totalPoints} POINTS
                                                         </span>
+                                                        {selectedTeam.seasonId && typeof selectedTeam.seasonId === 'object' && (
+                                                            <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 flex items-center gap-1.5">
+                                                                <Calendar className="w-3 h-3 text-zinc-600" />
+                                                                {selectedTeam.seasonId.title}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -378,7 +405,7 @@ export default function TeamDetails() {
                                 {searchQuery ? `No results for "${searchQuery}"` : "No Teams Registered Yet"}
                             </h2>
                             <button
-                                onClick={() => searchQuery ? setSearchQuery("") : window.location.href = "/admin/entry"}
+                                onClick={() => searchQuery ? setSearchQuery("") : window.location.href = seasonId ? `/admin/entry?seasonId=${seasonId}` : "/admin/entry"}
                                 className="mt-6 text-yellow-500 hover:text-yellow-400 font-bold uppercase tracking-widest text-sm underline underline-offset-8 decoration-yellow-500/30"
                             >
                                 {searchQuery ? "Clear Search" : "Register Your Squad Now"}

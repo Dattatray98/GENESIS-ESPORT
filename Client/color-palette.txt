@@ -1,0 +1,34 @@
+BGMI Tournament Website - Color Palette
+
+PRIMARY ACCENT (NEON)
+Color Code: #facc15
+Description: Vibrant yellow used for highlights, primary buttons, and tactical glows.
+
+PRIMARY ACCENT HOVER
+Color Code: #eab308
+Description: Darker yellow used for hover states on primary elements.
+
+CORE BACKGROUND
+Color Code: #09090b
+Description: Main dark background (Zinc 950 equivalent) for the entire application.
+
+ZINC NEUTRALS (LAYERING)
+Zinc 900: Used for card backgrounds and elevated components.
+Zinc-800: Used for borders and subtle dividers.
+
+PRIMARY TEXT
+Color Code: #f3f4f6
+Description: Off-white (Gray 100 equivalent) for high-contrast readability.
+
+SECONDARY TEXT
+Color Code: #71717a
+Description: Muted gray (Zinc 500 equivalent) for labels and supporting text.
+
+STATUS INDICATORS
+Success/Active: #10b981
+Alert/Warning: #f59e0b (Amber)
+Error/Danger: #ef4444 (Red)
+
+TYPOGRAPHY
+Headings: Teko (Tactical, bold, uppercase)
+Body: Rajdhani (Modern, clean sans-serif)
