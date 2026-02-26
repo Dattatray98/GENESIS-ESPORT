@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLeaderboard } from '@/context/LeaderboardContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Target, Zap, TrendingUp, Shield } from 'lucide-react';
@@ -9,6 +9,7 @@ export default function ObsOverlay() {
     const { seasonId } = useParams<{ seasonId: string }>();
     const { teams, loading, refreshTeams, setSeasonId } = useLeaderboard();
     const [tickerIndex, setTickerIndex] = React.useState(0);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Sync season ID with context
     useEffect(() => {
@@ -65,6 +66,47 @@ export default function ObsOverlay() {
         return () => clearInterval(interval);
     }, [tickerMessages.length]);
 
+    // Auto-scroll standings
+    useEffect(() => {
+        const scrollContainer = scrollRef.current;
+        if (!scrollContainer || verifiedTeams.length === 0) return;
+
+        let scrollInterval: any;
+        let pauseTimeout: any;
+
+        const startScrolling = () => {
+            if (!scrollContainer) return;
+
+            // Only scroll if content exceeds container height
+            if (scrollContainer.scrollHeight <= scrollContainer.clientHeight) return;
+
+            scrollInterval = setInterval(() => {
+                if (scrollContainer) {
+                    scrollContainer.scrollTop += 0.5;
+
+                    // Check if reached bottom (with small buffer)
+                    if (scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1) {
+                        clearInterval(scrollInterval);
+                        pauseTimeout = setTimeout(() => {
+                            // Smooth scroll back to top
+                            scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                            // Wait at top before restarting
+                            pauseTimeout = setTimeout(startScrolling, 4000);
+                        }, 3000); // Wait at bottom
+                    }
+                }
+            }, 30);
+        };
+
+        const initialTimeout = setTimeout(startScrolling, 3000);
+
+        return () => {
+            clearTimeout(initialTimeout);
+            clearInterval(scrollInterval);
+            clearTimeout(pauseTimeout);
+        };
+    }, [verifiedTeams.length]);
+
     if (loading && verifiedTeams.length === 0) {
         return <div className="fixed inset-0 flex items-center justify-center text-yellow-500 font-teko text-4xl animate-pulse">LOADING TACTICAL OVERLAY...</div>;
     }
@@ -72,7 +114,7 @@ export default function ObsOverlay() {
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden font-rajdhani bg-transparent">
             {/* Right Sidebar - Persistent Teams List */}
-            <div className="absolute right-8 top-12 bottom-58 w-80 pointer-events-auto flex flex-col gap-2 ">
+            <div className="absolute right-8 top-12 bottom-[28vh] w-80 pointer-events-auto flex flex-col gap-2 ">
                 <motion.div
                     initial={{ x: 100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -83,7 +125,7 @@ export default function ObsOverlay() {
                 </motion.div>
 
                 {/* Sidebar Header Navbar */}
-                <div className="bg-zinc-950/90 border border-zinc-800/50 rounded-xl p-3 px-4 flex items-center justify-between backdrop-blur-md">
+                <div className="bg-zinc-950/90 border border-red-800 rounded-xl p-3 px-4 flex items-center justify-between backdrop-blur-md">
                     <div className="flex items-center gap-2 px-2">
                         <span className="text-[13px] font-bold text-zinc-400  uppercase tracking-widest w-6">#</span>
                         <span className="text-[11px] font-bold text-zinc-400  uppercase tracking-widest">Team Name</span>
@@ -95,7 +137,11 @@ export default function ObsOverlay() {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-1 pr-1" style={{ perspective: "1000px" }}>
+                <div
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-scroll max-h-[60vh] p-1  custom-scrollbar flex flex-col gap-1 pr-1"
+                    style={{ perspective: "1000px" }}
+                >
                     <AnimatePresence>
                         {verifiedTeams.map((team, index) => (
                             <motion.div
@@ -109,11 +155,11 @@ export default function ObsOverlay() {
                                     stiffness: 100,
                                     damping: 15
                                 }}
-                                className="relative overflow-hidden rounded-xl bg-zinc-950/80 border border-zinc-800/50 backdrop-blur-md group origin-top"
+                                className="relative rounded-l-sm rounded-r-xl bg-zinc-950/80 border border-zinc-800 backdrop-blur-md group origin-top"
                             >
                                 {/* Rank Stripe */}
                                 <div className={cn(
-                                    "absolute left-0 top-0 bottom-0 w-1",
+                                    "absolute left-0 top-0 bottom-0 rounded-l-xl w-1",
                                     index === 0 ? "bg-yellow-500 shadow-[0_0_10px_#facc15]" : "bg-zinc-700"
                                 )} />
 
