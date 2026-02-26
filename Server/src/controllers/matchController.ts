@@ -76,7 +76,8 @@ export const addTeamsToMatch = async (req: Request, res: Response) => {
                 kills: 0,
                 placementPoints: 0,
                 totalPoints: 0,
-                rank: 0
+                rank: 0,
+                alivePlayers: 4
             }));
 
         if (newResults.length > 0) {
@@ -155,7 +156,8 @@ export const updateMatch = async (req: Request, res: Response) => {
 
         const updatedMatch = await Match.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
-        // Simultaneously update global standings if results were updated
+        const { results } = req.body; // Expecting an array of { teamId, kills, placementPoints, totalPoints, rank, alivePlayers }
+
         if (req.body.results && updatedMatch) {
             await recalculateGlobalStandings(updatedMatch.seasonId);
         }

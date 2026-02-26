@@ -16,6 +16,7 @@ export interface IMatch extends Document {
         placementPoints: number;
         totalPoints: number;
         rank: number;
+        alivePlayers: number;
     }[];
     streamUrl?: string;
 }
@@ -39,7 +40,8 @@ const MatchSchema: Schema = new Schema({
         kills: { type: Number, default: 0 },
         placementPoints: { type: Number, default: 0 },
         totalPoints: { type: Number, default: 0 },
-        rank: { type: Number }
+        rank: { type: Number },
+        alivePlayers: { type: Number, default: 4 }
     }],
     streamUrl: { type: String }
 }, { timestamps: true });

@@ -1,15 +1,26 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useLeaderboard } from '@/context/LeaderboardContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Target, Zap, TrendingUp, Shield } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Trophy, Target, Zap } from 'lucide-react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAxios } from '@/hooks/useAxios';
 
 export default function ObsOverlay() {
     const { seasonId } = useParams<{ seasonId: string }>();
+    const [searchParams] = useSearchParams();
+    const matchId = searchParams.get('matchId');
     const { teams, loading, refreshTeams, setSeasonId } = useLeaderboard();
-    const [tickerIndex, setTickerIndex] = React.useState(0);
+    const { request: fetchMatch } = useAxios();
+    const [matchData, setMatchData] = React.useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Notification State
+    const [activeNotification, setActiveNotification] = React.useState<{ message: string; submessage?: string } | null>(null);
+    const [isBarVisible, setIsBarVisible] = React.useState(false);
+    const notificationQueue = useRef<string[]>([]);
+    const isProcessingQueue = useRef(false);
+    const prevTeamsRef = useRef<any[]>([]);
 
     // Sync season ID with context
     useEffect(() => {
@@ -18,58 +29,72 @@ export default function ObsOverlay() {
         }
     }, [seasonId, setSeasonId]);
 
-    // Filter verified teams only and ensure they match the season
-    const verifiedTeams = useMemo(() => {
+
+
+    // Refresh everything periodically
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            refreshTeams();
+            if (matchId) {
+                try {
+                    const data = await fetchMatch({
+                        url: `matches/${matchId}`,
+                        method: 'GET'
+                    });
+                    if (data) setMatchData(data);
+                } catch (error) {
+                    console.error("Match refresh failed", error);
+                }
+            }
+        }, 3000); // 3s refresh for real-time live feel
+        return () => clearInterval(interval);
+    }, [refreshTeams, matchId, fetchMatch]);
+
+    // Combined Standings Logic
+    const displayTeams = useMemo(() => {
+        // CASE 1: Match Specific Mode
+        if (matchId && matchData && matchData.results) {
+            return matchData.results.map((res: any) => {
+                const teamId = res.teamId?._id || res.teamId;
+                const baseTeam = teams.find(t => String(t._id) === String(teamId));
+
+                return {
+                    ...baseTeam,
+                    teamName: res.teamId?.teamName || baseTeam?.teamName || "UNIT UNKNOWN",
+                    totalKills: Number(res.kills || 0),
+                    placementPoints: Number(res.placementPoints || 0),
+                    totalPoints: Number(res.totalPoints || 0),
+                    rank: res.rank || 0,
+                    alivePlayers: Number(res.alivePlayers ?? baseTeam?.alivePlayers ?? 4),
+                    isVerified: true
+                };
+            }).sort((a: any, b: any) => {
+                // Initial sort by points, if points are 0 use alphabetical/base order
+                if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+                return (a.teamName || "").localeCompare(b.teamName || "");
+            });
+        }
+
+        // CASE 2: Global Season Mode (Fallback)
         return teams.filter(t => {
             const matchesSeason = !seasonId ||
                 (typeof t.seasonId === 'string' ? t.seasonId === seasonId : t.seasonId?._id === seasonId);
             return t.isVerified && matchesSeason;
         });
-    }, [teams, seasonId]);
-
-    // Refresh teams periodically
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refreshTeams();
-        }, 3000); // 3s refresh for real-time live feel
-        return () => clearInterval(interval);
-    }, [refreshTeams]);
+    }, [teams, seasonId, matchId, matchData]);
 
     const stats = useMemo(() => {
-        const squadsInGame = verifiedTeams.filter(t => (t.alivePlayers ?? 4) > 0).length;
-        const totalSurvivors = verifiedTeams.reduce((acc, t) => acc + (t.alivePlayers ?? 0), 0);
+        const squadsInGame = displayTeams.filter((t: any) => (t.alivePlayers ?? 4) > 0).length;
+        const totalSurvivors = displayTeams.reduce((acc: number, t: any) => acc + (t.alivePlayers ?? 0), 0);
         return { squadsInGame, totalSurvivors };
-    }, [verifiedTeams]);
+    }, [displayTeams]);
 
-    // Bottom Ticker messages
-    const tickerMessages = useMemo(() => {
-        if (verifiedTeams.length === 0) return ["WAITING FOR SQUAD DEPLOYMENT...", "STAY TUNED!"];
 
-        const topTeam = verifiedTeams[0];
-        const secondTeam = verifiedTeams[1];
-        const mostKills = [...verifiedTeams].sort((a, b) => b.totalKills - a.totalKills)[0];
-
-        return [
-            `TOURNAMENT LEAD: ${topTeam.teamName.toUpperCase()} WITH ${topTeam.totalPoints} PTS`,
-            `SURVIVORS ON FIELD: ${stats.totalSurvivors} PLAYERS`,
-            `MOST LETHAL TEAM: ${mostKills.teamName.toUpperCase()} (${mostKills.totalKills} KILLS)`,
-            `CHASE IS ON: ${secondTeam?.teamName?.toUpperCase() || 'N/A'} AT #${secondTeam?.rank || 2}`,
-            "BATTLEGROUNDS MOBILE INDIA TOURNAMENT LIVE"
-        ];
-    }, [verifiedTeams, stats.totalSurvivors]);
-
-    // Cycle ticker messages
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTickerIndex((prev) => (prev + 1) % tickerMessages.length);
-        }, 8000);
-        return () => clearInterval(interval);
-    }, [tickerMessages.length]);
 
     // Auto-scroll standings
     useEffect(() => {
         const scrollContainer = scrollRef.current;
-        if (!scrollContainer || verifiedTeams.length === 0) return;
+        if (!scrollContainer || displayTeams.length === 0) return;
 
         let scrollInterval: any;
         let pauseTimeout: any;
@@ -105,9 +130,61 @@ export default function ObsOverlay() {
             clearInterval(scrollInterval);
             clearTimeout(pauseTimeout);
         };
-    }, [verifiedTeams.length]);
+    }, [displayTeams.length]);
 
-    if (loading && verifiedTeams.length === 0) {
+    // Notification Logic
+    const processQueue = React.useCallback(() => {
+        if (isProcessingQueue.current || notificationQueue.current.length === 0) return;
+
+        isProcessingQueue.current = true;
+        const msg = notificationQueue.current.shift();
+        setActiveNotification({ message: msg || "" });
+        setIsBarVisible(true);
+
+        setTimeout(() => {
+            setIsBarVisible(false);
+            setTimeout(() => {
+                setActiveNotification(null);
+                isProcessingQueue.current = false;
+                processQueue();
+            }, 1000); // exit anim wait
+        }, 5000); // visible duration
+    }, []);
+
+    const addNotification = React.useCallback((msg: string) => {
+        notificationQueue.current.push(msg);
+        processQueue();
+    }, [processQueue]);
+
+    // Change Detection
+    useEffect(() => {
+        if (displayTeams.length === 0) return;
+
+        if (prevTeamsRef.current.length > 0) {
+            displayTeams.forEach((team: any) => {
+                const prevTeam = prevTeamsRef.current.find((t: any) => String(t._id || t.teamName) === String(team._id || team.teamName));
+                if (prevTeam) {
+                    // 1. Kills Update
+                    if (team.totalKills > prevTeam.totalKills) {
+                        const diff = team.totalKills - prevTeam.totalKills;
+                        addNotification(`${team.teamName.toUpperCase()} SECURED ${diff} ELIMINATION${diff > 1 ? 'S' : ''}!`);
+                    }
+                    // 2. Points Update
+                    if (team.totalPoints > prevTeam.totalPoints && team.totalKills === prevTeam.totalKills) {
+                        addNotification(`${team.teamName.toUpperCase()} EARNED PLACEMENT POINTS!`);
+                    }
+                    // 3. Team Wipe
+                    if ((prevTeam.alivePlayers ?? 4) > 0 && team.alivePlayers === 0) {
+                        addNotification(`${team.teamName.toUpperCase()} HAS BEEN WIPED OUT!`);
+                    }
+                }
+            });
+        }
+
+        prevTeamsRef.current = displayTeams;
+    }, [displayTeams, addNotification]);
+
+    if (loading && displayTeams.length === 0) {
         return <div className="fixed inset-0 flex items-center justify-center text-yellow-500 font-teko text-4xl animate-pulse">LOADING TACTICAL OVERLAY...</div>;
     }
 
@@ -121,7 +198,7 @@ export default function ObsOverlay() {
                     className="flex items-center gap-3 bg-zinc-950/90 border-2 border-yellow-500 p-4 rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.2)]"
                 >
                     <Trophy className="w-6 h-6 text-yellow-500" />
-                    <h2 className="text-2xl font-teko text-white uppercase tracking-widest">Live <span className="text-yellow-500">Standings</span></h2>
+                    <h2 className="text-2xl font-teko text-white uppercase tracking-widest">{matchId ? 'Match' : 'Live'} <span className="text-yellow-500">Standings</span></h2>
                 </motion.div>
 
                 {/* Sidebar Header Navbar */}
@@ -143,7 +220,7 @@ export default function ObsOverlay() {
                     style={{ perspective: "1000px" }}
                 >
                     <AnimatePresence>
-                        {verifiedTeams.map((team, index) => (
+                        {displayTeams.map((team: any, index: number) => (
                             <motion.div
                                 key={team.teamName}
                                 initial={{ opacity: 0, rotateX: -90, y: -20 }}
@@ -199,92 +276,87 @@ export default function ObsOverlay() {
                 </div>
             </div>
 
-            {/* Bottom Overlay Bar */}
-            <motion.div
-                initial={{ y: 200 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: "circOut" }}
-                className="absolute bottom-0 left-0 right-0 h-[25vh] pointer-events-auto"
-            >
-                {/* Main Glass Morphic Bar */}
-                <div className="relative h-full bg-zinc-950/95 border-t-2 border-yellow-500 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center px-8">
-
-                    {/* Left Side: Tournament Logo / Info */}
-                    <div className="flex items-center gap-6 border-r border-zinc-800 pr-8 h-12">
-                        <div className="relative">
+            {/* Bottom Notification Bar */}
+            <AnimatePresence>
+                {isBarVisible && activeNotification && (
+                    <motion.div
+                        initial={{ y: 200, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 200, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-auto overflow-hidden"
+                    >
+                        {/* Tactical Background Layer */}
+                        <div className="absolute inset-0 bg-zinc-950/95 border-t-4 border-yellow-500 shadow-[0_-15px_50px_rgba(0,0,0,0.9)]">
+                            {/* Scanning Animation */}
                             <motion.div
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center -rotate-6 shadow-[0_0_20px_rgba(234,179,8,0.4)]"
-                            >
-                                <Zap className="w-6 h-6 text-black fill-black" />
-                            </motion.div>
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-black" />
-                        </div>
-                        <div className="leading-none">
-                            <h2 className="text-2xl font-teko font-black text-white uppercase tracking-tighter">GENESIS <span className="text-yellow-500">ESPORTS</span> S-1</h2>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] mt-1">RISE OF COMPETITORS LIVE</p>
-                        </div>
-                    </div>
-
-                    {/* Middle: Live Stats Ticker */}
-                    <div className="flex-1 px-12 overflow-hidden relative">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={tickerIndex}
-                                initial={{ y: 40, opacity: 0, filter: "blur(5px)" }}
-                                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                                exit={{ y: -40, opacity: 0, filter: "blur(5px)" }}
-                                className="flex items-center gap-4"
-                            >
-                                <div className="bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-black text-yellow-500 uppercase tracking-widest">
-                                    LIVE INTEL
-                                </div>
-                                <span className="text-2xl font-teko font-bold text-zinc-100 uppercase tracking-wider">
-                                    {tickerMessages[tickerIndex]}
-                                </span>
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Right Side: Map & Phase Info */}
-                    <div className="flex items-center gap-8 border-l border-zinc-800 pl-8 h-12">
-                        <div className="flex flex-col items-end leading-none">
-                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Combat Zone</span>
-                            <span className="text-xl font-teko font-bold text-white uppercase">ERANGEL</span>
-                        </div>
-
-                        <div className="relative w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center group overflow-hidden">
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                className="absolute inset-0 border-2 border-dashed border-yellow-500/20"
+                                animate={{ x: ['-100%', '200%'] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                className="absolute top-0 bottom-0 w-1/3 bg-linear-to-r from-transparent via-yellow-500/10 to-transparent skew-x-12"
                             />
-                            <Target className="w-6 h-6 text-yellow-500 relative z-10" />
-                        </div>
-                    </div>
-                </div>
 
-                {/* Bottom-most Detail Strip */}
-                <div className="h-6 bg-yellow-500 flex items-center justify-between px-10">
-                    <div className="flex gap-4">
-                        <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">PHASE 04</span>
-                        <span className="text-[9px] font-black text-black uppercase tracking-[0.2em] opacity-50">/</span>
-                        <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">SQUADS ACTIVE: {stats.squadsInGame}</span>
-                        <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">SURVIVORS: {stats.totalSurvivors}</span>
-                    </div>
-                    <div className="flex gap-8">
-                        <div className="flex items-center gap-1.5">
-                            <Shield className="w-3 h-3 text-black" />
-                            <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">ANTIGRAVITY SYNC ACTIVE</span>
+                            {/* Grid Detail */}
+                            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#facc15_1px,transparent_1px)] bg-size-[20px_20px]" />
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <TrendingUp className="w-3 h-3 text-black" />
-                            <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">LATENCY 14MS</span>
+
+                        <div className="relative h-full flex items-center px-12 gap-12">
+                            {/* Left Badge */}
+                            <div className="flex flex-col items-center">
+                                <motion.div
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 0.5, repeat: Infinity }}
+                                    className="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center rotate-45 shadow-[0_0_30px_rgba(234,179,8,0.5)] border-4 border-white/20"
+                                >
+                                    <Zap className="w-8 h-8 text-black -rotate-45 fill-black" />
+                                </motion.div>
+                                <span className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.3em] mt-4">LIVE INTEL</span>
+                            </div>
+
+                            {/* Message Center */}
+                            <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-[2px] w-12 bg-yellow-500" />
+                                    <span className="text-xs font-black text-yellow-500 uppercase tracking-[0.5em]">OPERATIONAL UPDATE</span>
+                                    <div className="h-[2px] flex-1 bg-yellow-500/20" />
+                                </div>
+                                <motion.h2
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    className="text-5xl font-teko font-black text-white uppercase tracking-tighter italic"
+                                >
+                                    {activeNotification.message}
+                                </motion.h2>
+                            </div>
+
+                            {/* Right Status */}
+                            <div className="flex items-center gap-6 border-l border-zinc-800 pl-12">
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">SQUADS ALIVE</p>
+                                    <p className="text-3xl font-teko font-black text-white">{stats.squadsInGame}</p>
+                                </div>
+                                <div className="w-12 h-12 rounded-full border-2 border-yellow-500 flex items-center justify-center relative shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                                    <Target className="w-6 h-6 text-yellow-500" />
+                                    <motion.div
+                                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                        className="absolute inset-0 rounded-full border border-yellow-500"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </motion.div>
+
+                        {/* Bottom Detail Strip */}
+                        <div className="absolute bottom-0 left-0 right-0 h-2 bg-yellow-500">
+                            <motion.div
+                                initial={{ width: "0%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 5, ease: "linear" }}
+                                className="h-full bg-white/50"
+                            />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Tactical Grid Background */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none"

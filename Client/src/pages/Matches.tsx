@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Plus, Search, Calendar, Clock, Trophy, Gamepad2, PlayCircle, X
+    Plus, Search, Calendar, Clock, Trophy, Gamepad2, PlayCircle, X, Zap
 } from "lucide-react";
 import { Button } from '@/components/ui/Button';
 import { useSeasons, type Season } from '@/hooks/useSeasons';
@@ -378,6 +378,13 @@ export default function Matches() {
                                                 className="h-12 rounded-xl px-8"
                                             >
                                                 MATCH LEADERBOARD
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => window.open(`/overlay/${selectedMatch.seasonId._id}?matchId=${selectedMatch._id}`, '_blank')}
+                                                className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black rounded-xl h-12 font-bold px-6 shadow-[0_0_15px_rgba(234,179,8,0.1)]"
+                                            >
+                                                <Zap className="w-4 h-4 mr-2 fill-yellow-500 group-hover:fill-black" /> OVERLAY
                                             </Button>
                                         </div>
                                     )}
