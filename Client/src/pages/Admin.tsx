@@ -14,9 +14,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { useSeasons, type Season } from "@/hooks/useSeasons";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { fetchSeasons, loading } = useSeasons();
     const [seasons, setSeasons] = useState<Season[]>([]);
 
@@ -106,15 +108,17 @@ export default function AdminDashboard() {
                                         <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">Active</div>
                                     </div>
                                 </div>
-                                <Button
-                                    onClick={() => navigate('/admin/seasons/createseason')}
-                                    variant="neon"
-                                    size="lg"
-                                    className="h-16 px-8 font-black tracking-widest text-sm shadow-[0_0_30px_rgba(234,179,8,0.2)]"
-                                >
-                                    <Plus className="w-5 h-5 mr-3" />
-                                    NEW SEASON
-                                </Button>
+                                {user?.role === 'admin' && (
+                                    <Button
+                                        onClick={() => navigate('/admin/seasons/createseason')}
+                                        variant="neon"
+                                        size="lg"
+                                        className="h-16 px-8 font-black tracking-widest text-sm shadow-[0_0_30px_rgba(234,179,8,0.2)]"
+                                    >
+                                        <Plus className="w-5 h-5 mr-3" />
+                                        NEW SEASON
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </ScrollReveal>
@@ -193,20 +197,22 @@ export default function AdminDashboard() {
                                     </ScrollReveal>
                                 ))}
 
-                                <ScrollReveal delay={activeSeasons.length * 0.1}>
-                                    <div
-                                        onClick={() => navigate('/admin/seasons/createseason')}
-                                        className="h-full min-h-[300px] bg-zinc-900/20 border-2 border-dashed border-zinc-800 rounded-[2.5rem] flex flex-col items-center justify-center gap-6 hover:border-yellow-500/40 hover:bg-yellow-500/5 transition-all cursor-pointer group"
-                                    >
-                                        <div className="w-20 h-20 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-yellow-500/50 transition-all">
-                                            <Plus className="w-10 h-10 text-zinc-600 group-hover:text-yellow-500" />
+                                {user?.role === 'admin' && (
+                                    <ScrollReveal delay={activeSeasons.length * 0.1}>
+                                        <div
+                                            onClick={() => navigate('/admin/seasons/createseason')}
+                                            className="h-full min-h-[300px] bg-zinc-900/20 border-2 border-dashed border-zinc-800 rounded-[2.5rem] flex flex-col items-center justify-center gap-6 hover:border-yellow-500/40 hover:bg-yellow-500/5 transition-all cursor-pointer group"
+                                        >
+                                            <div className="w-20 h-20 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-yellow-500/50 transition-all">
+                                                <Plus className="w-10 h-10 text-zinc-600 group-hover:text-yellow-500" />
+                                            </div>
+                                            <div className="text-center space-y-1">
+                                                <p className="text-lg font-teko font-bold text-zinc-500 uppercase tracking-widest group-hover:text-white">Initialize New Season</p>
+                                                <p className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.2em]">Ready for Next Deployment</p>
+                                            </div>
                                         </div>
-                                        <div className="text-center space-y-1">
-                                            <p className="text-lg font-teko font-bold text-zinc-500 uppercase tracking-widest group-hover:text-white">Initialize New Season</p>
-                                            <p className="text-[10px] text-zinc-600 uppercase font-black tracking-[0.2em]">Ready for Next Deployment</p>
-                                        </div>
-                                    </div>
-                                </ScrollReveal>
+                                    </ScrollReveal>
+                                )}
                             </div>
 
                             {activeSeasons.length === 0 && (

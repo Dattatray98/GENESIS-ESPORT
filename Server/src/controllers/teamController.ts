@@ -1,44 +1,32 @@
 import { Request, Response } from 'express';
 import Team from '../models/Team';
-import { cloudinary } from '../config/cloudinary';
-import fs from 'fs';
 
 // @desc    Register a new team
 // @route   POST /api/teams/register
 // @access  Private/Admin
 export const registerTeam = async (req: Request, res: Response) => {
-    let localFilePath: string | undefined;
     try {
         const {
             teamName,
             leaderName,
+            leaderId,
             email,
             phone,
             player2,
+            player2Id,
             player3,
+            player3Id,
             player4,
+            player4Id,
             substitute,
+            substituteId,
+            documentUrl,
             seasonId
         } = req.body;
 
-        if (!req.file) {
-            return res.status(400).json({ message: 'Verification document file is required' });
+        if (!documentUrl) {
+            return res.status(400).json({ message: 'Verification document link is required' });
         }
-
-        localFilePath = req.file.path;
-
-        // Upload to Cloudinary manually
-        // Upload to Cloudinary manually
-        const result = await cloudinary.uploader.upload(localFilePath, {
-            folder: 'GENESIS-Cloud',
-            transformation: [{ width: 1000, height: 1000, crop: 'limit' }]
-        });
-
-        const documentUrl = result.secure_url;
-
-        // Delete local file
-        fs.unlinkSync(localFilePath);
-        localFilePath = undefined;
 
         const existingTeam = await Team.findOne({ teamName });
         if (existingTeam) {
@@ -48,13 +36,18 @@ export const registerTeam = async (req: Request, res: Response) => {
         const newTeam = new Team({
             teamName,
             leaderName,
+            leaderId,
             email,
             phone,
             player2,
+            player2Id,
             player3,
+            player3Id,
             player4,
+            player4Id,
             substitute,
-            documentUrl: documentUrl,
+            substituteId,
+            documentUrl,
             seasonId
         });
 
@@ -71,24 +64,8 @@ export const registerTeam = async (req: Request, res: Response) => {
         console.error('Message:', error.message);
         console.error('Stack:', error.stack);
 
-        // Safe file log
-        try {
-            fs.appendFileSync('registration_error.log', `[${timestamp}] ${error.message}\n${error.stack}\n\n`);
-        } catch (logErr) {
-            console.error('Failed to write to registration_error.log');
-        }
-
-        // Cleanup local file if it still exists
-        try {
-            if (localFilePath && fs.existsSync(localFilePath)) {
-                fs.unlinkSync(localFilePath);
-            }
-        } catch (cleanupErr) {
-            console.error('Failed to cleanup local file');
-        }
-
         res.status(500).json({
-            message: 'Server error during registration. Please check logs.',
+            message: 'Server error during registration.',
             error: error.message
         });
     }
@@ -110,7 +87,7 @@ export const getTeams = async (req: Request, res: Response) => {
                 const token = req.headers.authorization.split(' ')[1];
                 const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
                 const user = await User.findById(decoded.id);
-                if (user && user.role === 'admin') {
+                if (user && (user.role === 'admin' || user.role === 'registration_admin')) {
                     isAdmin = true;
                 }
             } catch (err) {

@@ -30,9 +30,13 @@ export default function Navbar() {
         { name: "FAQ", href: "/#faq", type: "anchor", protected: false },
         { name: "Leaderboard", href: "/leaderboard", type: "link", protected: false },
         { name: "Admin Panel", href: "/admin", type: "link", protected: true },
+        { name: "Team Entry", href: "/admin/entry", type: "link", protected: true },
     ];
 
-    const filteredLinks = navLinks.filter(link => !link.protected || (user && user.role === 'admin'));
+    const filteredLinks = navLinks.filter(link =>
+        !link.protected ||
+        (user && (user.role === 'admin' || user.role === 'registration_admin'))
+    );
 
     const handleNavigation = (href: string, type: string) => {
         setIsOpen(false);

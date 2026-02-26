@@ -251,28 +251,43 @@ export default function TeamDetails() {
                                                     </h3>
                                                     <div className="space-y-3 bg-zinc-950/40 border border-zinc-800/50 rounded-2xl p-6">
                                                         <div className="flex items-center justify-between group">
-                                                            <span className="text-zinc-500 text-xs uppercase tracking-widest">Captain</span>
-                                                            <span className="text-white font-bold group-hover:text-yellow-500 transition-colors">{selectedTeam.leaderName || "N/A"}</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-zinc-500 text-[10px] uppercase tracking-widest">Captain</span>
+                                                                <span className="text-white font-bold group-hover:text-yellow-500 transition-colors">{selectedTeam.leaderName || "N/A"}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{selectedTeam.leaderId || "NO ID"}</span>
                                                         </div>
                                                         <div className="h-px bg-zinc-800/50" />
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-zinc-500 text-xs uppercase tracking-widest">Player 2</span>
-                                                            <span className="text-zinc-200 font-semibold">{selectedTeam.player2 || "N/A"}</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-zinc-500 text-[10px] uppercase tracking-widest">Player 2</span>
+                                                                <span className="text-zinc-200 font-semibold">{selectedTeam.player2 || "N/A"}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{selectedTeam.player2Id || "NO ID"}</span>
                                                         </div>
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-zinc-500 text-xs uppercase tracking-widest">Player 3</span>
-                                                            <span className="text-zinc-200 font-semibold">{selectedTeam.player3 || "N/A"}</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-zinc-500 text-[10px] uppercase tracking-widest">Player 3</span>
+                                                                <span className="text-zinc-200 font-semibold">{selectedTeam.player3 || "N/A"}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{selectedTeam.player3Id || "NO ID"}</span>
                                                         </div>
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-zinc-500 text-xs uppercase tracking-widest">Player 4</span>
-                                                            <span className="text-zinc-200 font-semibold">{selectedTeam.player4 || "N/A"}</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-zinc-500 text-[10px] uppercase tracking-widest">Player 4</span>
+                                                                <span className="text-zinc-200 font-semibold">{selectedTeam.player4 || "N/A"}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{selectedTeam.player4Id || "NO ID"}</span>
                                                         </div>
                                                         {selectedTeam.substitute && (
                                                             <>
                                                                 <div className="h-px bg-zinc-800/50" />
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="text-zinc-500 text-xs uppercase tracking-widest">Substitute</span>
-                                                                    <span className="text-zinc-400 italic">{selectedTeam.substitute}</span>
+                                                                <div className="flex items-center justify-between text-zinc-500">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[10px] uppercase tracking-widest">Substitute</span>
+                                                                        <span className="italic text-xs">{selectedTeam.substitute}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-mono bg-zinc-900 px-2 py-1 rounded border border-zinc-800">{selectedTeam.substituteId || "NO ID"}</span>
                                                                 </div>
                                                             </>
                                                         )}
@@ -331,38 +346,30 @@ export default function TeamDetails() {
                                                 </h3>
                                                 <div className="bg-zinc-950/40 border border-zinc-800/50 rounded-2xl overflow-hidden group/doc relative shadow-xl">
                                                     {selectedTeam.documentUrl ? (
-                                                        <div className="relative">
-                                                            <img
-                                                                src={selectedTeam.documentUrl}
-                                                                alt="Verification"
-                                                                className="w-full h-56 object-cover opacity-60 group-hover/doc:opacity-100 transition-opacity duration-500 cursor-zoom-in"
-                                                                onClick={() => window.open(selectedTeam.documentUrl, '_blank')}
-                                                                onError={(e) => {
-                                                                    const target = e.target as HTMLImageElement;
-                                                                    target.src = "https://placehold.co/400x200/18181b/yellow?text=Invalid+Image+URL";
-                                                                }}
-                                                            />
-                                                            <div className="absolute inset-0 bg-linear-to-t from-zinc-950/80 to-transparent flex items-end p-4">
-                                                                <div className="flex items-center justify-between w-full">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <FileText className="w-3 h-3 text-yellow-500" />
-                                                                        <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-widest">
-                                                                            Preview Mode • Click to zoom
-                                                                        </span>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => window.open(selectedTeam.documentUrl, '_blank')}
-                                                                        className="p-2 bg-yellow-500/10 hover:bg-yellow-500 text-yellow-500 hover:text-black rounded-lg transition-all"
-                                                                    >
-                                                                        <ExternalLink className="w-4 h-4" />
-                                                                    </button>
+                                                        <div className="p-6 text-center">
+                                                            <div className="flex flex-col items-center gap-4">
+                                                                <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+                                                                    <ExternalLink className="w-8 h-8 text-yellow-500" />
                                                                 </div>
+                                                                <div className="space-y-1">
+                                                                    <p className="text-white font-bold uppercase tracking-wider text-sm">Verification Link Ready</p>
+                                                                    <p className="text-zinc-500 text-[10px] uppercase tracking-widest max-w-xs mx-auto">
+                                                                        Review the squad's identification documents via the secure external link provided.
+                                                                    </p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => window.open(selectedTeam.documentUrl, '_blank')}
+                                                                    className="mt-2 w-full max-w-[200px] py-2 bg-zinc-800 hover:bg-yellow-500 hover:text-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2"
+                                                                >
+                                                                    OPEN DRIVE LINK
+                                                                    <ExternalLink className="w-3 h-3" />
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <div className="p-8 text-center border-2 border-dashed border-zinc-800 rounded-2xl">
                                                             <FileText className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-                                                            <span className="block text-xs text-zinc-600 uppercase italic tracking-widest">No document uploaded</span>
+                                                            <span className="block text-xs text-zinc-600 uppercase italic tracking-widest">No document link provided</span>
                                                         </div>
                                                     )}
                                                 </div>

@@ -146,44 +146,50 @@ export default function Admin() {
             desc: "View roster details, verify documents, and edit teams.",
             icon: Edit,
             href: `/admin/teams?seasonId=${seasonId}`,
-            color: "from-blue-500/20 to-transparent"
+            color: "from-blue-500/20 to-transparent",
+            allowedRoles: ['admin', 'registration_admin']
         },
         {
             title: "Manual Entry",
             desc: "Register a new team directly from the panel.",
             icon: PlusCircle,
             href: `/admin/entry?seasonId=${seasonId}`,
-            color: "from-green-500/20 to-transparent"
+            color: "from-green-500/20 to-transparent",
+            allowedRoles: ['admin', 'registration_admin']
         },
         {
             title: "Season Overview",
             desc: "View historical data and statistics for this season.",
             icon: Calendar,
             href: `/admin/seasons`,
-            color: "from-orange-500/20 to-transparent"
+            color: "from-orange-500/20 to-transparent",
+            allowedRoles: ['admin']
         },
         {
             title: "Global Leaderboard",
             desc: "Comprehensive standings for all matches this season.",
             icon: Eye,
             href: `/leaderboard?seasonId=${seasonId}`,
-            color: "from-purple-500/20 to-transparent"
+            color: "from-purple-500/20 to-transparent",
+            allowedRoles: ['admin']
         },
         {
             title: "OBS Overlay",
             desc: "Open the tactical browser source for OBS/streaming.",
             icon: Zap,
             href: `/overlay/${seasonId}`,
-            color: "from-yellow-400/20 to-transparent"
+            color: "from-yellow-400/20 to-transparent",
+            allowedRoles: ['admin']
         },
         {
             title: "Manage Matches",
             desc: "View, schedule, and filter matches for this season.",
             icon: Calendar,
             href: `/matches?seasonId=${seasonId}`,
-            color: "from-red-500/20 to-transparent"
+            color: "from-red-500/20 to-transparent",
+            allowedRoles: ['admin']
         }
-    ];
+    ].filter(action => action.allowedRoles.includes(user?.role || ''));
 
     const recentTeams = teams
         .filter(t => {
@@ -219,12 +225,14 @@ export default function Admin() {
 
                         <ScrollReveal delay={0.1}>
                             <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowEndSeasonModal(true)}
-                                    className="px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 font-bold uppercase text-xs tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-[0_0_20px_rgba(239,68,68,0.1)]"
-                                >
-                                    End Season
-                                </button>
+                                {user?.role === 'admin' && (
+                                    <button
+                                        onClick={() => setShowEndSeasonModal(true)}
+                                        className="px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 font-bold uppercase text-xs tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+                                    >
+                                        End Season
+                                    </button>
+                                )}
                             </div>
                         </ScrollReveal>
                     </div>

@@ -14,8 +14,12 @@ export default function Login() {
 
     const onSubmit = async (data: any) => {
         try {
-            await login(data);
-            navigate('/admin/leaderboard/update');
+            const user = await login(data);
+            if (user.role === 'registration_admin') {
+                navigate('/admin');
+            } else {
+                navigate('/admin/leaderboard/update');
+            }
         } catch (err) {
             // Error is handled by the hook and displayed via the 'error' state
         }

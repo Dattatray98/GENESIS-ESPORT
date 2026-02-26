@@ -5,7 +5,7 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'user' | 'registration_admin';
     comparePassword: (password: string) => Promise<boolean>;
 }
 
@@ -13,7 +13,7 @@ const UserSchema = new Schema<IUser>({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'user'], default: 'user' }
+    role: { type: String, enum: ['admin', 'user', 'registration_admin'], default: 'user' }
 }, { timestamps: true });
 
 // Hash password before saving - Using async/await without next() to avoid TS overload issues

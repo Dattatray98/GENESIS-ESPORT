@@ -9,10 +9,15 @@ export interface Team {
     isVerified: boolean;
     group: 'Group-1' | 'Group-2' | 'None';
     leaderName?: string;
+    leaderId?: string;
     player2?: string;
+    player2Id?: string;
     player3?: string;
+    player3Id?: string;
     player4?: string;
+    player4Id?: string;
     substitute?: string;
+    substituteId?: string;
     email?: string;
     phone?: string;
     documentUrl?: string;

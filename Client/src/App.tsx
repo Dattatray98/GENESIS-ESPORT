@@ -47,12 +47,16 @@ function App() {
 
               {/* Admin Only Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin/leaderboard/update" element={<UpdateScore />} />
+                <Route path="/admin/seasons/createseason" element={<CreateSeason />} />
+              </Route>
+
+              {/* Shared Admin & Registration Admin Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'registration_admin']} />}>
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/seasons/:seasonId" element={<CurrentSeason />} />
-                <Route path="/admin/leaderboard/update" element={<UpdateScore />} />
                 <Route path="/admin/entry" element={<TeamEntry />} />
                 <Route path="/admin/teams" element={<TeamDetails />} />
-                <Route path="/admin/seasons/createseason" element={<CreateSeason />} />
               </Route>
             </Routes>
           </Suspense>

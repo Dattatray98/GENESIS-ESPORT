@@ -38,3 +38,14 @@ export const admin = (req: AuthRequest, res: Response, next: NextFunction) => {
         res.status(403).json({ message: 'Not authorized as an admin' });
     }
 };
+
+export const authorizeRoles = (...roles: string[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        if (req.user && roles.includes(req.user.role)) {
+            next();
+        } else {
+            console.warn(`Role check failed for user: ${req.user?.email}. Required one of: ${roles.join(', ')}`);
+            res.status(403).json({ message: `Not authorized. Required role: ${roles.join(' or ')}` });
+        }
+    };
+};

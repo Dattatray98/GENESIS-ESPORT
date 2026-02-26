@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
@@ -13,12 +13,17 @@ import axios from "axios";
 interface TeamEntryForm {
     teamName: string;
     leaderName: string;
+    leaderId: string;
     email: string;
     phone: string;
     player2: string;
+    player2Id: string;
     player3: string;
+    player3Id: string;
     player4: string;
+    player4Id: string;
     substitute?: string;
+    substituteId?: string;
     documentUrl?: string;
 }
 
@@ -30,11 +35,9 @@ export default function TeamEntry() {
     const { registerTeam, loading, error: apiError } = useTeams();
     const navigate = useNavigate();
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [activeSeasons, setActiveSeasons] = useState<any[]>([]);
     const [selectedSeasonId, setSelectedSeasonId] = useState<string>(seasonIdFromUrl || currentSeasonId || "");
     const [selectedSeasonName, setSelectedSeasonName] = useState<string>("");
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const { register, handleSubmit, reset, formState: { errors } } = useForm<TeamEntryForm>();
 
     useEffect(() => {
@@ -64,45 +67,33 @@ export default function TeamEntry() {
 
     const onSubmit = async (data: TeamEntryForm) => {
         try {
-            const formData = new FormData();
-            Object.entries(data).forEach(([key, value]) => {
-                if (value !== undefined) formData.append(key, value);
-            });
-
-            if (selectedFile) {
-                formData.append('file', selectedFile);
-            } else {
-                throw new Error("Verification document image is required");
-            }
-
             if (!selectedSeasonId) {
                 throw new Error("Please select a tournament season");
             }
-            formData.append('seasonId', selectedSeasonId);
 
-            const response = await registerTeam(formData);
+            const submissionData = {
+                ...data,
+                seasonId: selectedSeasonId
+            };
+
+            const response = await registerTeam(submissionData);
             if (response && response.team) {
                 addTeam(response.team);
+                setIsSubmitted(true);
+                reset();
             } else {
-                addTeam(data); // Fallback
+                // If it reaches here without throwing, but no team returned,
+                // it's likely a logic error or non-standard response.
+                console.error("No team returned from registration response");
             }
-            setIsSubmitted(true);
-            reset();
-            setSelectedFile(null);
         } catch (err) {
             console.error("Registration failed:", err);
-        }
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+            // Error is already captured by useTeams and displayed via apiError
         }
     };
 
     const handleRegisterAnother = () => {
         setIsSubmitted(false);
-        setSelectedFile(null);
     };
 
     return (
@@ -173,12 +164,19 @@ export default function TeamEntry() {
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
                                                 <User className="w-4 h-4 text-yellow-500" /> Team Leader *
                                             </label>
-                                            <input
-                                                {...register("leaderName", { required: "Leader name is required" })}
-                                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
-                                                placeholder="In-Game Name (IGN)"
-                                            />
-                                            {errors.leaderName && <p className="text-red-500 text-xs mt-1">{errors.leaderName.message}</p>}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input
+                                                    {...register("leaderName", { required: "Leader name is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Leader IGN"
+                                                />
+                                                <input
+                                                    {...register("leaderId", { required: "Leader ID is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700 font-mono"
+                                                    placeholder="BGMI ID"
+                                                />
+                                            </div>
+                                            {(errors.leaderName || errors.leaderId) && <p className="text-red-500 text-xs mt-1">Leader name and ID are required</p>}
                                         </div>
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
@@ -209,83 +207,86 @@ export default function TeamEntry() {
                                         <h3 className="text-2xl font-teko text-yellow-500 border-l-4 border-yellow-500 pl-4 mb-4 uppercase">Roster Details</h3>
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                                <Users className="w-4 h-4 text-yellow-500" /> Player 2 IGN *
+                                                <Users className="w-4 h-4 text-yellow-500" /> Player 2 Detail *
                                             </label>
-                                            <input
-                                                {...register("player2", { required: "Player 2 is required" })}
-                                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
-                                                placeholder="IGN"
-                                            />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input
+                                                    {...register("player2", { required: "Player 2 is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Player 2 IGN"
+                                                />
+                                                <input
+                                                    {...register("player2Id", { required: "Player 2 ID is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700 font-mono"
+                                                    placeholder="BGMI ID"
+                                                />
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                                <Users className="w-4 h-4 text-yellow-500" /> Player 3 IGN *
+                                                <Users className="w-4 h-4 text-yellow-500" /> Player 3 Detail *
                                             </label>
-                                            <input
-                                                {...register("player3", { required: "Player 3 is required" })}
-                                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
-                                                placeholder="IGN"
-                                            />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input
+                                                    {...register("player3", { required: "Player 3 is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Player 3 IGN"
+                                                />
+                                                <input
+                                                    {...register("player3Id", { required: "Player 3 ID is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700 font-mono"
+                                                    placeholder="BGMI ID"
+                                                />
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                                <Users className="w-4 h-4 text-yellow-500" /> Player 4 IGN *
+                                                <Users className="w-4 h-4 text-yellow-500" /> Player 4 Detail *
                                             </label>
-                                            <input
-                                                {...register("player4", { required: "Player 4 is required" })}
-                                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
-                                                placeholder="IGN"
-                                            />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input
+                                                    {...register("player4", { required: "Player 4 is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Player 4 IGN"
+                                                />
+                                                <input
+                                                    {...register("player4Id", { required: "Player 4 ID is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700 font-mono"
+                                                    placeholder="BGMI ID"
+                                                />
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="text-sm font-semibold text-zinc-300/50 mb-2 uppercase tracking-widest flex items-center gap-2">
                                                 <Users className="w-4 h-4 text-zinc-600" /> Substitute (Optional)
                                             </label>
-                                            <input
-                                                {...register("substitute")}
-                                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
-                                                placeholder="IGN"
-                                            />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input
+                                                    {...register("substitute")}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Substitute IGN"
+                                                />
+                                                <input
+                                                    {...register("substituteId")}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700 font-mono"
+                                                    placeholder="BGMI ID"
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="pt-4 border-t border-zinc-800/50">
                                             <label className="text-sm font-semibold text-zinc-400 mb-2 uppercase tracking-widest flex items-center gap-2">
-                                                <FileText className="w-4 h-4 text-yellow-500" /> Verification Document (ID/Aadhar) *
+                                                <FileText className="w-4 h-4 text-yellow-500" /> Verification Drive Link *
                                             </label>
-
-                                            <div
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className={`relative cursor-pointer group/upload border-2 border-dashed transition-all duration-300 rounded-xl p-6 flex flex-col items-center justify-center gap-3 ${selectedFile ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-zinc-800 hover:border-zinc-700 bg-zinc-950/50'}`}
-                                            >
+                                            <div className="relative group">
                                                 <input
-                                                    type="file"
-                                                    ref={fileInputRef}
-                                                    onChange={handleFileChange}
-                                                    className="hidden"
-                                                    accept="image/*"
+                                                    {...register("documentUrl", { required: "Verification link is required" })}
+                                                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg px-4 py-3 pl-10 text-white focus:border-yellow-500 outline-none transition-all placeholder-zinc-700"
+                                                    placeholder="Paste Google Drive URL here"
                                                 />
-                                                {selectedFile ? (
-                                                    <>
-                                                        <CheckCircle2 className="w-8 h-8 text-yellow-500" />
-                                                        <div className="text-center">
-                                                            <p className="text-sm text-white font-bold truncate max-w-[200px]">
-                                                                {selectedFile.name}
-                                                            </p>
-                                                            <p className="text-[10px] text-zinc-500 uppercase">Click to change file</p>
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover/upload:scale-110 transition-transform">
-                                                            <Upload className="w-6 h-6 text-zinc-500 group-hover/upload:text-yellow-500 transition-colors" />
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <p className="text-sm text-zinc-400 font-semibold uppercase">Upload ID Image</p>
-                                                            <p className="text-[10px] text-zinc-600">JPG, PNG OR WEBP (MAX 5MB)</p>
-                                                        </div>
-                                                    </>
-                                                )}
+                                                <Upload className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-yellow-500 transition-colors" />
                                             </div>
+                                            {errors.documentUrl && <p className="text-red-500 text-xs mt-1">{errors.documentUrl.message}</p>}
                                         </div>
                                     </div>
                                 </div>

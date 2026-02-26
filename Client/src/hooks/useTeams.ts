@@ -5,12 +5,17 @@ import { type Team } from '@/constants/leaderboardData';
 export interface TeamData {
     teamName: string;
     leaderName: string;
+    leaderId: string;
     email: string;
     phone: string;
     player2: string;
+    player2Id: string;
     player3: string;
+    player3Id: string;
     player4: string;
+    player4Id: string;
     substitute?: string;
+    substituteId?: string;
     documentUrl?: string;
 }
 
@@ -48,10 +53,10 @@ export const useTeams = () => {
         registerTeam,
         fetchTeams,
         updateTeamsScore,
-        loading,
-        error,
-        mutationLoading,
-        mutationError
+        loading: mutationLoading || loading,
+        error: mutationError || error,
+        isFetching: loading,
+        fetchError: error
     };
 };
 
