@@ -107,17 +107,21 @@ export function LeaderboardProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("bgmi_leaderboard");
     }, []);
 
+    const refreshTeams = useCallback(async () => {
+        await loadTeams(currentSeasonId || undefined);
+    }, [loadTeams, currentSeasonId]);
+
     const value = useMemo(() => ({
         teams,
         updateTeams,
         addTeam,
         verifyTeam,
         resetTeams,
-        refreshTeams: () => loadTeams(currentSeasonId || undefined),
+        refreshTeams,
         loading,
         setSeasonId,
         currentSeasonId
-    }), [teams, updateTeams, addTeam, verifyTeam, resetTeams, loadTeams, loading, setSeasonId, currentSeasonId]);
+    }), [teams, updateTeams, addTeam, verifyTeam, resetTeams, refreshTeams, loading, setSeasonId, currentSeasonId]);
 
     return (
         <LeaderboardContext.Provider value={value}>

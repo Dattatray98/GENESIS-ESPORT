@@ -92,10 +92,21 @@ export const TeamCard: React.FC<TeamCardProps> = ({
             {showPlayers && (
                 <div className="mt-6 pt-5 border-t border-zinc-800/50">
                     <div className="grid grid-cols-2 gap-3">
-                        {[team.leaderName, team.player2, team.player3, team.player4].filter(Boolean).map((player, idx) => (
-                            <div key={idx} className="bg-zinc-950/50 border border-zinc-800/30 rounded-lg py-2 px-3 flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
-                                <span className="text-[11px] font-bold text-zinc-400 uppercase truncate">{player}</span>
+                        {[
+                            { ign: team.leaderName, id: team.leaderId },
+                            { ign: team.player2, id: team.player2Id },
+                            { ign: team.player3, id: team.player3Id },
+                            { ign: team.player4, id: team.player4Id },
+                            { ign: team.substitute, id: team.substituteId }
+                        ].filter(p => p.ign).map((player, idx) => (
+                            <div key={idx} className="bg-zinc-950/50 border border-zinc-800/30 rounded-lg py-2 px-3 flex flex-col justify-center">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 shrink-0" />
+                                    <span className="text-[11px] font-bold text-zinc-400 uppercase truncate" title={player.ign}>{player.ign}</span>
+                                </div>
+                                {player.id && (
+                                    <span className="text-[9px] font-mono text-zinc-600 mt-0.5 pl-3.5 truncate" title={player.id}>ID: {player.id}</span>
+                                )}
                             </div>
                         ))}
                     </div>

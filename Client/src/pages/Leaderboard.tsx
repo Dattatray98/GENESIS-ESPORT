@@ -92,9 +92,10 @@ export default function Leaderboard() {
             return;
         }
 
+        const target = new Date(currentMatch.dateTime).getTime();
+
         const timer = setInterval(() => {
             const now = new Date().getTime();
-            const target = new Date(currentMatch.dateTime).getTime();
             const diff = target - now;
 
             if (diff <= 0) {
@@ -113,7 +114,7 @@ export default function Leaderboard() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [currentMatch, refreshTeams]);
+    }, [currentMatch?.status, currentMatch?.dateTime, refreshTeams]);
 
     // Auto-set split view for public match
     useEffect(() => {

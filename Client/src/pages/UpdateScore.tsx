@@ -339,7 +339,15 @@ export default function UpdateScore() {
                                         </td>
                                     </tr>
                                 ) : fields.map((field, index) => {
-                                    const isMatch = (field as any).teamName?.toLowerCase().includes(searchQuery.toLowerCase());
+                                    const team = watchedTeams[index] || field as any;
+                                    const q = searchQuery.toLowerCase();
+                                    const isMatch = team.teamName?.toLowerCase().includes(q) ||
+                                        team.leaderName?.toLowerCase().includes(q) ||
+                                        team.player2?.toLowerCase().includes(q) ||
+                                        team.player3?.toLowerCase().includes(q) ||
+                                        team.player4?.toLowerCase().includes(q) ||
+                                        team.substitute?.toLowerCase().includes(q);
+
                                     if (searchQuery && !isMatch) return null;
 
                                     const handleScoreKeyDown = (e: React.KeyboardEvent, fieldProp: string, currentIndex: number) => {
@@ -424,13 +432,30 @@ export default function UpdateScore() {
                                     };
 
                                     return (
-                                        <tr key={field.id} className="group hover:bg-zinc-800/30 transition-colors">
-                                            <td className="p-2 min-w-[200px]">
+                                        <tr key={field.id} className="group hover:bg-zinc-800/30 transition-colors [&>td]:align-top">
+                                            <td className="p-2 min-w-[300px]">
                                                 <input
                                                     {...register(`teams.${index}.teamName`, { required: true })}
                                                     className="w-full bg-transparent border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:border-yellow-500 outline-none transition-colors font-bold"
                                                     placeholder="Team Name"
                                                 />
+                                                {(watchedTeams[index]?.leaderName || watchedTeams[index]?.player2) && (
+                                                    <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1.5 px-0.5 pb-1">
+                                                        {[
+                                                            { role: 'Leader', ign: watchedTeams[index].leaderName, id: watchedTeams[index].leaderId },
+                                                            { role: 'Player 2', ign: watchedTeams[index].player2, id: watchedTeams[index].player2Id },
+                                                            { role: 'Player 3', ign: watchedTeams[index].player3, id: watchedTeams[index].player3Id },
+                                                            { role: 'Player 4', ign: watchedTeams[index].player4, id: watchedTeams[index].player4Id },
+                                                            { role: 'Sub', ign: watchedTeams[index].substitute, id: watchedTeams[index].substituteId }
+                                                        ].filter(p => p.ign).map((p, i) => (
+                                                            <div key={i} className="flex flex-col bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/30">
+                                                                <span className="font-black uppercase text-[9px] tracking-wider text-yellow-500/70 leading-none mb-1">{p.role}</span>
+                                                                <span className="text-sm font-bold text-zinc-200 truncate" title={p.ign}>{p.ign}</span>
+                                                                <span className="font-mono text-[10px] tracking-wider text-zinc-500 truncate mt-0.5">{p.id || 'N/A'}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="p-2">
                                                 <select
