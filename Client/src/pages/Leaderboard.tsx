@@ -322,14 +322,14 @@ export default function Leaderboard() {
                             <div className="flex items-center justify-center gap-4 mb-4">
                                 {currentMatch.roomId && (
                                     <div className="bg-zinc-900 border border-zinc-800 px-4 py-1 rounded-lg flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Room ID:</span>
-                                        <span className="font-teko text-xl font-bold text-yellow-500 tracking-wider">{currentMatch.roomId}</span>
+                                        <span className="text-7xl font-black text-zinc-500 uppercase tracking-widest">Room ID:</span>
+                                        <span className="font-teko text-7xl mt-2 font-bold text-yellow-500 tracking-wider">{currentMatch.roomId}</span>
                                     </div>
                                 )}
                                 {currentMatch.password && (
                                     <div className="bg-zinc-900 border border-zinc-800 px-4 py-1 rounded-lg flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Pass:</span>
-                                        <span className="font-teko text-xl font-bold text-yellow-500 tracking-wider">{currentMatch.password}</span>
+                                        <span className="text-7xl font-black text-zinc-500 uppercase tracking-widest">Pass:</span>
+                                        <span className="font-teko text-7xl mt-2 font-bold text-yellow-500 tracking-wider">{currentMatch.password}</span>
                                     </div>
                                 )}
                             </div>

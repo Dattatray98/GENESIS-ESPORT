@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Plus, Search, Calendar, Clock, Trophy, Gamepad2, PlayCircle, X, Zap
+    Plus, Search, Calendar, Clock, Trophy, Gamepad2, PlayCircle, X, Zap, Edit2
 } from "lucide-react";
 import { Button } from '@/components/ui/Button';
 import { useSeasons, type Season } from '@/hooks/useSeasons';
@@ -11,6 +11,11 @@ import { useAxios } from '@/hooks/useAxios';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { TeamCard } from '@/components/match/TeamCard';
+
+const getLocalDatetimeString = (date = new Date()) => {
+    const tzOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+};
 
 interface Match {
     _id: string;
@@ -59,7 +64,7 @@ export default function Matches() {
         roomId: "",
         password: "",
         maxPlayers: 60,
-        dateTime: new Date().toISOString().slice(0, 16),
+        dateTime: getLocalDatetimeString(),
         status: "upcoming" as const
     };
     const [newMatch, setNewMatch] = useState(initialMatchState);
@@ -69,6 +74,37 @@ export default function Matches() {
             ...initialMatchState,
             seasonId: selectedSeasonId || ""
         });
+    };
+
+    const { request: updateMatchRequest } = useAxios<any>();
+    const [showEditRoomModal, setShowEditRoomModal] = useState(false);
+    const [roomDetails, setRoomDetails] = useState({ roomId: "", password: "" });
+
+    const handleOpenEditRoom = () => {
+        if (!selectedMatch) return;
+        setRoomDetails({
+            roomId: selectedMatch.roomId || "",
+            password: selectedMatch.password || ""
+        });
+        setShowEditRoomModal(true);
+    };
+
+    const handleUpdateRoom = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMatch) return;
+        try {
+            const data = await updateMatchRequest({
+                url: `matches/${selectedMatch._id}`,
+                method: 'PUT',
+                data: roomDetails
+            });
+            if (data) {
+                setMatches(prev => prev.map(m => m._id === data._id ? data : m));
+                setShowEditRoomModal(false);
+            }
+        } catch (error) {
+            console.error("Failed to update room details", error);
+        }
     };
 
     const selectedMatch = useMemo(() =>
@@ -126,10 +162,14 @@ export default function Matches() {
     const handleCreateMatch = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const dataToSubmit = {
+                ...newMatch,
+                dateTime: new Date(newMatch.dateTime).toISOString()
+            };
             const data = await createMatchRequest({
                 url: 'matches/add',
                 method: 'POST',
-                data: newMatch
+                data: dataToSubmit
             });
             if (data) {
                 setShowCreateModal(false);
@@ -345,6 +385,13 @@ export default function Matches() {
 
                                     {user?.role === 'admin' && (
                                         <div className="flex flex-wrap gap-3">
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleOpenEditRoom}
+                                                className="border-zinc-500/20 text-zinc-400 hover:bg-zinc-800 hover:text-white rounded-xl h-12 font-bold px-6"
+                                            >
+                                                <Edit2 className="w-4 h-4 mr-2" /> EDIT ROOM
+                                            </Button>
                                             <Button
                                                 variant="outline"
                                                 onClick={handleOpenTeamSelect}
@@ -600,6 +647,37 @@ export default function Matches() {
                                     <Button variant="neon" type="submit" className="w-full py-6 rounded-2xl text-2xl tracking-[0.2em] h-auto shadow-[0_10px_40px_rgba(234,179,8,0.2)]">
                                         DECODE & DEPLOY OPERATION
                                     </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* EDIT ROOM MODAL */}
+            <AnimatePresence>
+                {showEditRoomModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditRoomModal(false)} className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-10 shadow-2xl">
+                            <div className="flex justify-between items-center mb-10">
+                                <h2 className="text-3xl font-teko font-bold text-white uppercase tracking-wider">Edit <span className="text-yellow-500">Room Intel</span></h2>
+                                <button onClick={() => setShowEditRoomModal(false)} className="w-10 h-10 flex items-center justify-center hover:bg-zinc-800 rounded-xl text-zinc-500 transition-colors border border-zinc-800"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <form onSubmit={handleUpdateRoom} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Room ID</label>
+                                    <input type="text" value={roomDetails.roomId} onChange={(e) => setRoomDetails({ ...roomDetails, roomId: e.target.value })} placeholder="UNASSIGNED" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-5 py-4 text-white font-teko text-2xl focus:border-yellow-500 outline-none" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Room Password</label>
+                                    <input type="text" value={roomDetails.password} onChange={(e) => setRoomDetails({ ...roomDetails, password: e.target.value })} placeholder="PRIVATE" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-5 py-4 text-white font-teko text-2xl focus:border-yellow-500 outline-none" />
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-zinc-800/50 flex gap-4">
+                                    <Button variant="outline" type="button" onClick={() => setShowEditRoomModal(false)} className="flex-1 py-4 h-auto font-bold rounded-xl text-zinc-500">CANCEL</Button>
+                                    <Button variant="neon" type="submit" className="flex-1 py-4 h-auto text-xl rounded-xl">SAVE</Button>
                                 </div>
                             </form>
                         </motion.div>
