@@ -34,6 +34,7 @@ export default function MatchIntel() {
     const [match, setMatch] = useState<Match | null>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [overlayCountdown, setOverlayCountdown] = useState<number | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -70,9 +71,19 @@ export default function MatchIntel() {
                 if (hasStartedCountdown) {
                     setIsTransitioning(true);
                     hasStartedCountdown = false;
-                    setTimeout(() => {
-                        setIsTransitioning(false);
-                    }, 4000);
+
+                    setOverlayCountdown(3);
+
+                    let count = 3;
+                    const interval = setInterval(() => {
+                        count -= 1;
+                        if (count >= 0) {
+                            setOverlayCountdown(count);
+                        } else {
+                            clearInterval(interval);
+                            setIsTransitioning(false);
+                        }
+                    }, 1000);
                 }
                 setTimeLeft(null);
             }
@@ -123,18 +134,20 @@ export default function MatchIntel() {
                                 initial={{ scale: 0.8, opacity: 0, y: 50 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4, duration: 0.5 }}
-                                className="text-7xl md:text-[10rem] font-teko font-black text-transparent bg-clip-text bg-linear-to-b from-red-400 to-red-600 tracking-[0.2em] uppercase leading-none drop-shadow-[0_0_40px_rgba(239,68,68,0.8)] text-center italic"
+                                className="text-7xl md:text-[8rem] font-teko font-black text-transparent bg-clip-text bg-linear-to-b from-red-400 to-red-600 tracking-[0.2em] uppercase leading-none drop-shadow-[0_0_40px_rgba(239,68,68,0.8)] text-center italic"
                             >
                                 Match Starting<br /> With In
                             </motion.h1>
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 1, duration: 0.5 }}
-                                className="mt-6 md:mt-10 text-xl md:text-2xl font-rajdhani font-bold text-red-400 tracking-[0.5em] uppercase border-y border-red-500/30 py-2 px-8"
+                            <motion.div
+                                key={overlayCountdown}
+                                initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 1.2 }}
+                                transition={{ duration: 0.3 }}
+                                className="mt-6 md:mt-10 text-6xl md:text-[8rem] font-teko font-bold text-red-500 tracking-[0.2em] uppercase py-2 px-8"
                             >
-                                Loading...
-                            </motion.p>
+                                {overlayCountdown === 0 || overlayCountdown === null ? "MATCH STARTED" : overlayCountdown.toString()}
+                            </motion.div>
                         </motion.div>
                     </motion.div>
                 )}
