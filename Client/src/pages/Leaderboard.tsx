@@ -142,17 +142,17 @@ export default function Leaderboard() {
 
         fetchMatchData();
 
-        // Polling for match status if upcoming (every 10s)
-        let interval: any;
-        if (matchId) {
-            interval = setInterval(() => {
-                fetchMatchData();
-            }, 10000);
-        }
+        // // Polling for match status if upcoming (every 10s)
+        // let interval: any;
+        // if (matchId) {
+        //     interval = setInterval(() => {
+        //         fetchMatchData();
+        //     }, 10000);
+        // }
 
-        return () => {
-            if (interval) clearInterval(interval);
-        };
+        // return () => {
+        //     if (interval) clearInterval(interval);
+        // };
     }, [matchId, setSeasonId, currentSeasonId]);
 
     // Derived filtered seasons: All active + Last one completed
@@ -195,12 +195,12 @@ export default function Leaderboard() {
         fetchSeasons();
     }, [currentSeasonId, setSeasonId, seasonIdFromUrl]);
 
-    // Auto-refresh standings every 60 seconds
+    // Auto-refresh standings every 60 seconds (Disabled)
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (!loading) refreshTeams();
-        }, 60000);
-        return () => clearInterval(interval);
+        // const interval = setInterval(() => {
+        //     if (!loading) refreshTeams();
+        // }, 60000);
+        // return () => clearInterval(interval);
     }, [refreshTeams, loading]);
 
     const navLinks = [
