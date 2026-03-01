@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAxios } from "@/hooks/useAxios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
     Calendar,
     MapPin,
@@ -33,8 +33,8 @@ export default function MatchIntel() {
     const { request: fetchMatch, loading } = useAxios<Match>();
     const [match, setMatch] = useState<Match | null>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [overlayCountdown, setOverlayCountdown] = useState<number | null>(null);
+    const [, setIsTransitioning] = useState(false);
+    const [, setOverlayCountdown] = useState<number | null>(null);
 
     useEffect(() => {
         const loadData = async () => {

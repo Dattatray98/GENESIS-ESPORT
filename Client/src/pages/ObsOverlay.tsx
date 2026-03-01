@@ -224,7 +224,6 @@ export default function ObsOverlay() {
                     <div className="flex items-center gap-5.5">
                         <span className="text-[11px] font-bold text-zinc-400 text-center  uppercase tracking-widest">Pts</span>
                         <span className="text-[11px] font-bold text-zinc-400 text-center  uppercase tracking-widest">Kills</span>
-                        <span className="text-[11px] font-bold text-zinc-400 text-center  uppercase tracking-widest">Live</span>
                     </div>
                 </div>
 
@@ -263,25 +262,9 @@ export default function ObsOverlay() {
                                     <div className="flex items-center gap-4">
                                         <div className="text-sm font-teko font-bold text-yellow-500 w-6 text-center">{team.totalPoints}</div>
 
-                                        <div className="flex items-center gap-1 w-8 justify-end">
+                                        <div className="flex items-center gap-1 w-8 justify-end pr-3">
                                             <span className="text-sm font-bold text-zinc-400 leading-none">{team.totalKills}</span>
                                         </div>
-
-                                        {/* Player Status Dots (Alive) */}
-                                        <div className="flex gap-1" title={`${team.alivePlayers ?? 4} Players Alive`}>
-                                            {[1, 2, 3, 4].map((dot, dotIdx) => (
-                                                <div
-                                                    key={dot}
-                                                    className={cn(
-                                                        "w-1.5 h-1.5 rounded-full transition-all duration-500",
-                                                        dotIdx < (team.alivePlayers ?? 4)
-                                                            ? "bg-yellow-500 shadow-[0_0_5px_rgba(234,179,8,0.4)]"
-                                                            : "bg-zinc-800"
-                                                    )}
-                                                />
-                                            ))}
-                                        </div>
-
                                     </div>
                                 </div>
                             </motion.div>
@@ -292,7 +275,7 @@ export default function ObsOverlay() {
 
             {/* Bottom Notification Bar */}
             <AnimatePresence>
-                {isBarVisible && activeNotification && (
+                {false && isBarVisible && activeNotification && (
                     <motion.div
                         initial={{ y: 200, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
