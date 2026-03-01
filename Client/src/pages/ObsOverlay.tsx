@@ -314,9 +314,9 @@ export default function ObsOverlay() {
                                 <div className="flex items-center gap-4">
                                     <div className="h-[2px] w-12 bg-yellow-500" />
                                     <span className="text-xs font-black text-yellow-500 uppercase tracking-[0.5em]">OPERATIONAL UPDATE</span>
-                                    {activeNotification.rank && (
+                                    {activeNotification?.rank && (
                                         <div className="bg-yellow-500 text-black px-2 py-0.5 rounded-sm font-black text-[10px] tracking-tighter">
-                                            RANK #{activeNotification.rank}
+                                            RANK #{activeNotification?.rank}
                                         </div>
                                     )}
                                     <div className="h-[2px] flex-1 bg-yellow-500/20" />
@@ -326,7 +326,7 @@ export default function ObsOverlay() {
                                     animate={{ x: 0, opacity: 1 }}
                                     className="text-5xl font-teko font-black text-white uppercase tracking-tighter italic"
                                 >
-                                    {activeNotification.message}
+                                    {activeNotification?.message}
                                 </motion.h2>
                             </div>
 
